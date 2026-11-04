@@ -1,21 +1,15 @@
 # RL, randomization and autodiff
 
-The contracts of the vectorized environment, the trainer adapters, domain
-randomization and the differentiable rollouts. Gradients are checked against
-central finite differences, as relative error against the larger of the two
-magnitudes. Learning itself is only checked on one detumble task, by short
-CUDA-only training runs.
-
-The forward RL tests run on a test-local task, `DetumbleTask` in
-`tests/rl_tasks.py`; the example `AttitudeTask` is checked against it. Rows
-that need torch run in CI in the separate RL job; see
-[CI and local GPU checks](index.md#ci-and-local-gpu-checks).
+Gradients are checked against central finite differences, as relative
+error against the larger magnitude. The forward RL tests use a test-local
+`DetumbleTask` (`tests/rl_tasks.py`), against which the example
+`AttitudeTask` is checked. Rows needing torch run in the
+[RL job](index.md#ci-and-local-gpu-checks).
 
 ## Vectorized environment
 
-`tests/test_rl_env.py`, `tests/test_termination.py`: `VecEnv`, its
-auto-reset and the step contract ([theory](../theory/execution.md),
-[guide](../guides/rl.md)).
+`tests/test_rl_env.py`, `tests/test_termination.py`: `VecEnv` and the
+[step contract](../theory/execution.md#the-rl-step-contract).
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -53,8 +47,8 @@ of examples 13–16.
 ## Trainer adapters
 
 `tests/test_rl_rsl_adapter.py`, `tests/test_rl_skrl_adapter.py`,
-`tests/test_rl_rlgames_adapter.py`: rsl_rl, skrl and rl_games on the
-detumble task (12 kg, initial angular momentum up to 0.2 N·m·s per axis, attitude within 30°).
+`tests/test_rl_rlgames_adapter.py`, on the detumble task (12 kg, initial
+angular momentum up to 0.2 N·m·s per axis, attitude within 30°).
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -67,8 +61,8 @@ detumble task (12 kg, initial angular momentum up to 0.2 N·m·s per axis, attit
 
 ## Differentiable rollouts
 
-`tests/test_gradients.py`: Warp tape gradients of a terminal loss through
-20 steps, for all three integrators ([theory](../theory/differentiable.md),
+`tests/test_gradients.py`: tape gradients of a terminal loss through 20
+steps, all integrators ([theory](../theory/differentiable.md),
 [[17]](../references.md#ref-17)).
 
 | Claim | Referent | Tolerance |
@@ -89,8 +83,8 @@ detumble task (12 kg, initial angular momentum up to 0.2 N·m·s per axis, attit
 
 ## Torch bridge
 
-`tests/test_rl_diff_env.py`: `DiffSimStepper` exposes one step as a torch
-autograd node over the flat float64 state ([guide](../guides/differentiable-rl.md)).
+`tests/test_rl_diff_env.py`: `DiffSimStepper`, one step as a torch autograd
+node ([guide](../guides/differentiable-rl.md)).
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -110,7 +104,7 @@ autograd node over the flat float64 state ([guide](../guides/differentiable-rl.m
 ## Differentiable environment
 
 `tests/test_rl_diff_env.py`, `tests/test_example_shac.py`: `DiffVecEnv`
-windows, on a test-local task and on the example `AttitudeDiffTask`.
+windows, on a test-local task and `AttitudeDiffTask`.
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -137,8 +131,8 @@ windows, on a test-local task and on the example `AttitudeDiffTask`.
 
 ## Domain randomization
 
-`tests/test_randomization.py`, `tests/test_orbit_sampling.py`: per-entity
-vehicle parameters drawn at every reset ([guide](../guides/randomization.md)).
+`tests/test_randomization.py`, `tests/test_orbit_sampling.py`
+([guide](../guides/randomization.md)).
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -152,5 +146,5 @@ vehicle parameters drawn at every reset ([guide](../guides/randomization.md)).
 | YAML `randomization:` with per-body overrides, inertia from the body config, and validation | the loader | inside bounds; raises |
 | Mass randomization after an orbit draw | rescales momentum, keeping the orbit's velocity | 1e-6 relative |
 
-These check bounds and couplings; the distribution of the draws is checked
-only for reset states ([random streams](execution.md#random-streams-and-determinism)).
+Bounds and couplings only; distributions are checked for reset states
+([random streams](execution.md#random-streams-and-determinism)).

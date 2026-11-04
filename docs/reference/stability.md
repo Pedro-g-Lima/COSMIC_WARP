@@ -111,8 +111,9 @@ No notice, no changelog entry:
   `default_shac_cfg`, the scripts and the scenario files. They are
   application code to copy and adapt, not library API; what they use from
   the library is promised only where listed above;
-- performance: the step rates, memory use and launch counts on the
-  [Benchmarks](../benchmarks.md) page are measurements, not promises;
+- performance: step rates, memory use and launch counts, on
+  [Benchmarks](../benchmarks.md) or elsewhere, are measurements, not
+  promises;
 - test fixtures, `tests/rl_tasks.py` and benchmark baselines.
 
 ## What 1.0 means

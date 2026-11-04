@@ -1,13 +1,7 @@
 # Execution
 
-CUDA graphs, termination, resets, random streams, input checks and the YAML
-loader: the machinery around the physics must not change the answer. Rows
-marked *CUDA only* skip in CI and are verified on a local GPU; see
-[CI and local GPU checks](index.md#ci-and-local-gpu-checks).
-
-On CUDA, `simulate()` captures one step into a CUDA graph and replays it; on
-CPU it runs the same kernels eagerly. Every test that calls `simulate()`
-therefore exercises graph replay when run with `--device cuda`.
+The machinery around the physics must not change the answer. *CUDA only*
+rows skip in CI ([local GPU checks](index.md#ci-and-local-gpu-checks)).
 
 ## CUDA graphs
 
@@ -19,13 +13,12 @@ therefore exercises graph replay when run with `--device cuda`.
 | `simulate()` captures with every per-step feature on: J2, gravity gradient, magnetic torque, drag, bounds and planet-impact checks, an orbit-mode body, randomization, thrusters, wheels and auto-reset; 20 steps, all integrators (*CUDA only*) | capture raises on any host synchronization or device-to-host read inside the step | captures, finite state |
 | Episode counters advance inside `simulate()` | the step count | exact |
 
-`VecEnv.step()` replay is covered on the [learning page](learning.md#vectorized-environment).
+`VecEnv.step()` replay: [learning page](learning.md#vectorized-environment).
 
 ## Termination
 
 `tests/test_termination.py`, `tests/test_pipeline.py`, `tests/test_api.py`:
-termination is per environment: when one body violates a limit, every body
-of that environment finishes the step and then freezes.
+per environment; every body finishes the terminating step, then freezes.
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -37,7 +30,7 @@ of that environment finishes the step and then freezes.
 | Auto-reset stores the full terminating step in the saved trajectory, then resets the environment's state, wheels and commands | the step v·dt; zeros | 1e-7 relative; exactly zero |
 | A NaN in the state terminates its environment with reason 6, with or without bounds checks, all integrators | NaN passes every comparison, so it has its own check | exact |
 | `mass_limit` equal to the dry mass fires when propellant runs out | mass is clamped at dry mass, so the check is inclusive | reason 4 |
-| … on the burnout step itself: 4096 random propellant loads, two thruster settings, all integrators | the step-end mass is exactly dry on that step (two roundings per symplectic step left a quarter of entities one ulp above dry, never terminating) | step and reason exact; mass bitwise |
+| … on the burnout step itself: 4096 random propellant loads, two thruster settings, all integrators | the step-end mass is exactly dry on that step | step and reason exact; mass bitwise |
 | A NaN or Inf thrust or wheel-torque command terminates its environment with reason 6 before the step, all integrators | the clamps would turn it into a finite actuation | exact; state and wheel momenta unchanged bitwise |
 | `check_planet_impact` with the default `planet_radius`, from Python and YAML | Earth's equatorial radius, `RE_EARTH`: 1 m below it is an impact | reason 5 |
 | Termination reasons reported per entity and per (env, body) | the violated limit | exact |
@@ -65,8 +58,8 @@ of that environment finishes the step and then freezes.
 
 ## Random streams and determinism
 
-`tests/test_rng.py`: the generator. `tests/test_reset.py`, `tests/test_api.py`:
-reset sampling on the device, with 4096 environments for the statistics.
+`tests/test_rng.py` (the generator); `tests/test_reset.py`, `tests/test_api.py`
+(reset sampling, 4096 environments for the statistics).
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -88,8 +81,8 @@ reset sampling on the device, with 4096 environments for the statistics.
 
 ## Input validation
 
-Invalid input raises `ValueError` (or `RuntimeError` for a misuse of state)
-with a message naming the problem, before anything changes.
+Invalid input raises `ValueError` (`RuntimeError` for misuse of state)
+naming the problem, before anything changes.
 
 | Claim | Test |
 | --- | --- |
@@ -110,7 +103,7 @@ with a message naming the problem, before anything changes.
 ## YAML loader
 
 `tests/test_config.py`, `tests/test_api.py`, `tests/test_randomization.py`,
-`tests/test_orbit_sampling.py`: the loader is fail-closed, and the
+`tests/test_orbit_sampling.py`: fail-closed; the
 [configuration guide](../guides/configuration.md) is checked against it.
 
 | Claim | Referent | Tolerance |
@@ -159,8 +152,8 @@ with a message naming the problem, before anything changes.
 
 ## Examples
 
-`tests/test_examples.py`: the gallery pages are generated from the example
-scripts, so every script runs, as a user runs it.
+`tests/test_examples.py`: every script the gallery shows runs as a user
+runs it.
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
@@ -179,9 +172,8 @@ scripts, so every script runs, as a user runs it.
 
 ## Benchmark gate
 
-`tests/test_bench.py`: the performance regression gate in
-`benchmarks/bench.py`. The measured numbers are on the
-[benchmarks page](../benchmarks.md); they are not test-checked.
+`tests/test_bench.py`: the regression gate in `benchmarks/bench.py` (the
+[measured numbers](../benchmarks.md) are not test-checked).
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
