@@ -1,15 +1,15 @@
 # Scale up
 
-The same simulator runs one environment or a million. Getting the speed
-takes three things: enough environments to fill the GPU, the step replayed
-as a CUDA graph, and no host copies inside the loop.
+The same simulator runs one environment or a million. Speed needs three
+things: enough environments to fill the GPU, the step replayed as a CUDA
+graph, and no host copies inside the loop.
 
 ## A complete loop
 
-A rate-damping controller closes the loop on the device: a kernel reads the
-state and writes per-entity wheel torques, the simulator steps, and a second
-kernel accumulates a diagnostic. The whole iteration is captured once and
-replayed.
+A rate-damping controller closes the loop on the device: one kernel reads
+the state and writes per-entity wheel torques, the simulator steps, a second
+kernel accumulates a diagnostic. The iteration is captured once and
+replayed (on a CPU it runs eagerly).
 
 ```python
 import numpy as np
@@ -68,75 +68,55 @@ else:
 mean_rate = total.numpy()[0] / (200 * sim.num_entities)   # one host copy, at the end
 ```
 
-On a CPU the same loop runs eagerly; capture needs a CUDA device.
-
 ## Choose the batch size
 
-The [Benchmarks](../benchmarks.md) table gives the measured rates:
+| Batch | Behaviour on the measured GPU ([Benchmarks](../benchmarks.md)) |
+| --- | --- |
+| up to ~10⁴ environments | nearly free: one thread per entity, and the time per step barely grows; the smallest batches are set by launch overhead |
+| beyond | throughput levels off at the GPU's float64 rate ([why](../benchmarks.md#why-float64-limits-the-step)) |
 
-- **Up to roughly ten thousand environments** on the measured GPU, adding
-  environments is nearly free: one thread integrates one entity, and until the GPU is full
-  the time per step barely grows with the batch. At the smallest sizes the
-  step is set by launch overhead and kernel latency, not by the batch.
-- **Beyond that**, throughput levels off at the GPU's float64 arithmetic
-  rate (see [below](#float64)).
-
-The simulator itself needs about 1.3 kB of device memory per entity.
-Trajectories are larger: `save_states=True` stores 112 bytes per entity per
-step, so a million entities over a thousand steps take 112 GB. Record only
-what you need — final states with `simulate_monte_carlo()`, or your own
-on-device reduction as in the loop above.
+The simulator needs about 1.3 kB of device memory per entity. Trajectories
+are larger: `save_states=True` stores 112 bytes per entity per step (a
+million entities over a thousand steps is 112 GB). Record only what you
+need: final states with `simulate_monte_carlo()`, or an on-device reduction
+as above.
 
 ## `simulate()`, `step()` and your own graph
 
-**`simulate(num_steps)`** captures one step (with the optional trajectory
-writes and auto-reset) at the start of every call and replays it
-`num_steps` times. Commands are fixed for the call, so prefer a few long
-calls to many short ones.
-
-**`step()`** launches its kernels from Python on every call. That is fine
-for prototyping and when commands come from host code, but at small batches
-the launch overhead dominates the step itself.
-[Example 04](../examples/04_scalability.md) times this path.
+- **`simulate(num_steps)`** captures one step (with the optional trajectory
+  writes and auto-reset) at the start of every call and replays it.
+  Commands are fixed for the call: prefer a few long calls.
+- **`step()`** launches its kernels from Python each call; at small batches
+  launch overhead dominates ([example 04](../examples/04_scalability.md)
+  times it).
 
 ### Capture your own loop
 
 For closed-loop control at graph speed, capture your kernels and `step()`
-together, as in the loop above. What the graph fixes and what stays live:
+together, as above.
 
-- **Fixed:** scalars passed by value to a kernel (`dt`, the gain above) and
-  the identity of every array. Write into existing arrays (`assign`,
-  `copy`, a kernel); an array you replace is not seen by the graph.
-- **Live:** array contents — state, commands, and the vehicle, thruster and
-  wheel configurations, which `set_config` writes in place. Change them
-  between replays without recapturing.
+| Fixed by the capture | Live |
+| --- | --- |
+| scalars passed by value (`dt`, the gain above); the identity of every array — write into existing arrays (`assign`, `copy`, a kernel), never replace them | array contents: state, commands, and the vehicle, thruster and wheel configurations, which `set_config` writes in place |
+
 - **Not allowed inside:** host reads and synchronization — any `.numpy()`,
-  and `sim.reset()`, which validates on the host. `sim.reset_terminated()` runs on the device and can be captured.
-- `sim.step_count` counts Python calls, so it does not advance on replay;
+  and `sim.reset()`, which validates on the host. `sim.reset_terminated()`
+  runs on the device and can be captured.
+- `sim.step_count` counts Python calls and does not advance on replay;
   `get_episode_steps()` does.
 
-The RL environment captures its own step; see
-[RL environments](rl.md#cuda-graphs).
+The RL environment captures its own step ([CUDA graphs](rl.md#cuda-graphs)).
 
 ## Keep data on the device
 
-Every `.numpy()` copies to the host and waits for the GPU. Inside a loop
-that cost dominates. Instead:
+Every `.numpy()` copies and waits for the GPU. Instead:
 
 - **Command** with per-entity device arrays
-  (`set_thrust_commands_per_entity`, `set_rw_torque_commands_per_entity`), written
-  by a kernel or a zero-copy torch view, not a Python loop over entities.
-- **Record** with `simulate(save_states=True)`, or your own kernel writing
-  to a preallocated array.
-- **Reduce** on the device — sum a cost, count terminations — and copy the
-  result once.
+  (`set_thrust_commands_per_entity`, `set_rw_torque_commands_per_entity`)
+  written by a kernel or a zero-copy torch view.
+- **Record** with `simulate(save_states=True)` or your own kernel.
+- **Reduce** on the device and copy the result once.
 - **Read** getters and termination reasons after the loop.
 
-## Float64
-
-All state and physics are float64; there is no float32 mode. On consumer
-GPUs, which run float64 at a small fraction of their float32 rate, that
-arithmetic sets the ceiling — see
-[why float64 limits the step](../benchmarks.md#why-float64-limits-the-step-on-consumer-gpus).
-The same kernels run on the CPU (`device="cpu"`), which is useful for
-debugging and CI.
+All state and physics are float64; there is no float32 mode. The same
+kernels run on the CPU (`device="cpu"`), for debugging and CI.

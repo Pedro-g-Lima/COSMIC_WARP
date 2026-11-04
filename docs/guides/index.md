@@ -1,8 +1,7 @@
 # Guides
 
-Task-focused pages, each building on [Getting started](../getting-started.md).
-The conventions every page uses (environments, bodies, entities, frames and
-units) are on [Frames, state and units](../theory/conventions.md).
+One task per page, building on [Getting started](../getting-started.md).
+Conventions (entities, frames, units): [Frames, state and units](../theory/conventions.md).
 
 - [Configure a scenario (YAML)](configuration.md) — a whole scenario in one file.
 - [Vehicles](vehicle.md) — mass, inertia, drag and magnetic properties, per body.

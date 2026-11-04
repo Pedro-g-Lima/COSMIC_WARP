@@ -86,7 +86,7 @@ No notice, no changelog entry:
   `SimulationFlags`, `compute_forces`, `IntegratorFactory`, ...);
 - `sim.ctx` and the `SimContext` behind it: no guide reads it, and the
   integrator interface it feeds is expected to change before 1.0
-  ([Extending](../guides/extending.md#known-limitations-planned-for-1x));
+  ([Extending](../guides/extending.md#known-limitations));
 - `sim.integrator` and the integrator classes, `sim.flags` (read
   `metadata()`), `sim.episode_steps` (read `get_episode_steps()`) and
   `sim.termination_mask`;
