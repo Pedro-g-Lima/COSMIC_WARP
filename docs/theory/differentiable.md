@@ -48,7 +48,7 @@ integrator computes, truncation error included.
 Warp generates the adjoint of each kernel and replays the launches recorded
 on a `wp.Tape` in reverse ([[18]](../references.md#ref-18)).
 [`DifferentiableRollout`](../reference/api/cosmic_warp/core/autodiff.md)
-(`sim.differentiable_rollout(num_steps, commands)`) builds on it:
+(`sim.differentiable_rollout(num_steps, commands=...)`) builds on it:
 
 - **Per-step buffers.** Step $t$ reads buffer $t$ and writes $t+1$, so the
   backward pass sees every intermediate state

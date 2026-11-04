@@ -8,16 +8,18 @@ uses [semantic versioning](https://semver.org/).
 
 ### Documentation
 
-- Rewrote the README and the documentation site to about half the length:
-  tables and lists in place of prose, each caveat stated once next to the
-  claim it qualifies, status kept to this changelog and the roadmap.
+- Shortened the README and the documentation site (prose by about a third):
+  tables and lists in place of paragraphs, each caveat stated once next to
+  the claim it qualifies, status kept to this changelog and the roadmap.
+  Every tested claim, number and link stays.
 - Profiling findings (the float64 limit, register spills, the RL step's
   cost) moved to an experiment record, `docs/data/README.md`, outside the
   site.
-- Getting started explains installing on systems whose Python is older than
+- Getting started explains installing where the system Python is older than
   3.12, with conda or uv.
 - Fixed stale details: keyword-only `commands=` and reset selections in the
-  theory pages, broken anchors after renamed sections.
+  theory pages; validation rows name the `*_per_entity` setters instead of
+  "batched" ones.
 
 ## [0.1.0] - 2026-11-04
 

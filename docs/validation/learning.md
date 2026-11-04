@@ -136,7 +136,7 @@ windows, on a test-local task and `AttitudeDiffTask`.
 
 | Claim | Referent | Tolerance |
 | --- | --- | --- |
-| Batched `set_config_per_entity` | the given per-entity values; the inverse inertia computed in the kernel; other fields keep their defaults | values and defaults bitwise; the inverse within 1e-15 relative (one ulp) |
+| `set_config_per_entity` | the given per-entity values; the inverse inertia computed in the kernel; other fields keep their defaults | values and defaults bitwise; the inverse within 1e-15 relative (one ulp) |
 | Dry mass, propellant and inertia scale | inside their bounds; dry mass actually dispersed | exact |
 | Physical couplings | total mass = dry + propellant; inertia = one scale × each entity's own tensor; I I⁻¹ = identity | propellant inside its bounds; inertia 1e-15 relative; I I⁻¹ 1e-15 absolute |
 | Inertia scaling after a per-env or later `set_config` inertia | scales that tensor, not a copy taken at `set_bounds` | 1e-7 relative |

@@ -125,24 +125,19 @@ this and prints the throughput on your GPU.
 
 ## CUDA graphs
 
-On CUDA the first `step()` captures the step and later steps replay it; on
-the CPU it runs eagerly. The capture fixes scalars passed by value (task
-settings such as reward weights) and whether domain randomization is on:
-after changing either, call `env.invalidate_graph()` (setting
-`env.max_episode_steps` does it for you). Array contents stay live — write
-into existing arrays; the buffers (`env.actions`, `env.obs`, ...) are
-read-only attributes. A `set_config` between steps applies from the next
-step, and a new inertia is what the next auto-reset's
-[inertia randomization](randomization.md#the-nominal-inertia) scales.
-
-A host read in the loop (`.numpy()`, `.item()`, Python branching on device
-data) stalls the GPU every step.
+On CUDA the first `step()` captures the step and later steps replay it.
+After changing a task setting passed by value (a reward weight, say) or
+enabling randomization, call `env.invalidate_graph()`; array contents,
+including `set_config` values, stay live
+([what the graph fixes](../theory/execution.md#invariants)). Keep host reads
+(`.numpy()`, `.item()`, Python branching on device data) out of the loop:
+each stalls the GPU.
 
 ## Trainer adapters
 
-Each adapter wraps a `VecEnv` in its trainer's interface, imports the
-trainer only when imported, and has its own extra (tested versions in the
-[extras table](../getting-started.md#install)). `vec_env` returns the
+Each adapter wraps a `VecEnv` in its trainer's interface
+([interfaces](../theory/execution.md#trainer-adapters)) and has its own
+extra ([versions](../getting-started.md#install)); `vec_env` returns the
 wrapped `VecEnv`. **The adapters support one body per environment** and
 raise `NotImplementedError` otherwise; `VecEnv` itself is multi-body.
 
@@ -161,9 +156,6 @@ raise `NotImplementedError` otherwise; `VecEnv` itself is multi-body.
                             log_dir=None, device=rsl_env.device)
     runner.learn(num_learning_iterations=2)   # 100+ to learn
     ```
-
-    Observations are a `TensorDict` `{"policy": obs}`, `dones` is
-    `terminated or truncated`, `extras["time_outs"]` is `truncated`.
 
     Evaluate deterministically (the action mean):
 
@@ -192,9 +184,8 @@ raise `NotImplementedError` otherwise; `VecEnv` itself is multi-body.
                       cfg={"timesteps": 2 * 24, "headless": True}).train()   # 24 * 100+ to learn
     ```
 
-    A skrl torch `Wrapper`: `terminated`, `truncated` and the reward
-    reshaped to `[N, 1]`, the terminal observations in
-    `infos["terminal_observations"]`. `build_ppo_agent` builds a
+    The terminal observations are in `infos["terminal_observations"]`.
+    `build_ppo_agent` builds a
     Gaussian-policy `TerminalObsPPO` agent: skrl's PPO, but bootstrapping a
     truncated transition from the terminal observation rather than the next
     episode's first one. Build your own agent on `TerminalObsPPO` to keep
@@ -234,8 +225,6 @@ raise `NotImplementedError` otherwise; `VecEnv` itself is multi-body.
     runner.run_train({})
     ```
 
-    An `IVecEnv` registered under a name: observations as `{"obs": obs}`,
-    combined `dones`, `infos["time_outs"]` with `value_bootstrap` on.
     `default_ppo_params` defaults to `device="cuda:0"` and writes
     checkpoints under `train_dir` (rl_games' `runs/` if omitted).
 

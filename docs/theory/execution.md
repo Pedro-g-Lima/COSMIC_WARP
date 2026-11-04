@@ -145,8 +145,11 @@ the adapters and custom trainers rely on.
   `env.max_episode_steps` does; on CPU changes apply at once). Arrays are
   read live. `step()` also makes a newly configured inertia the nominal that
   inertia randomization scales (a host-side version check before replay).
-- **Framework-neutral core**: torch only for the views; trainer specifics in
-  the adapters.
+- **Framework-neutral core**: torch only for the zero-copy views
+  (`env.observations_torch()`, …, same memory as `env.obs`, …); trainer
+  specifics in the adapters.
+- **Single-buffered**: every buffer is overwritten each step, so a trainer
+  copies what it keeps.
 
 ### Indexing and shapes
 
@@ -216,25 +219,17 @@ set. Tasks are application code; the reference
 [`AttitudeTask`](../examples/attitude_task.md) is described in the
 [RL guide](../guides/rl.md#write-a-task).
 
-### Zero-copy interop
-
-The buffers are exposed natively (`env.obs`, `env.reward`, …) and as
-zero-copy torch views (`env.observations_torch()`, …) on the same memory.
-They are overwritten every step: a trainer copies each step's tensors, never
-keeps a view expecting history.
-
 ### Trainer adapters
 
-The core returns the superset signal — `terminated`, `truncated` and
-`terminal_obs` — so no adapter loses information. The adapters in
-`cosmic_warp.rl.adapters` are thin and import their trainer only when
-imported ([guide](../guides/rl.md#trainer-adapters)):
+The core returns `terminated`, `truncated` and `terminal_obs` separately,
+so no adapter loses information. The adapters are thin and import their
+trainer only when imported ([usage](../guides/rl.md#trainer-adapters)):
 
 | Adapter | Tested with | Interface |
 | --- | --- | --- |
 | `adapters/rsl_rl.py` | rsl-rl-lib 5.5 | `TensorDict` `{"policy": …}`, `dones = terminated ∨ truncated`, `extras["time_outs"]`; observation cloned (rsl_rl keeps the reference across steps) |
-| `adapters/skrl.py` | skrl 2.1 | skrl `Wrapper`, split `terminated`/`truncated` as `[N, 1]`; observation cloned; `build_ppo_agent` |
-| `adapters/rl_games.py` | rl-games 1.6 | registered `IVecEnv`, `{"obs": t}`, combined `dones`, `infos["time_outs"]`; `register_env`, `default_ppo_params` |
+| `adapters/skrl.py` | skrl 2.1 | skrl `Wrapper`, `terminated`, `truncated` and reward as `[N, 1]`; observation cloned; `build_ppo_agent` |
+| `adapters/rl_games.py` | rl-games 1.6 | registered `IVecEnv`, `{"obs": t}`, combined `dones`, `infos["time_outs"]` with `value_bootstrap`; `register_env`, `default_ppo_params` |
 
 A single-environment `gym.Env` is excluded on purpose: it forces a host
 synchronization per environment.
