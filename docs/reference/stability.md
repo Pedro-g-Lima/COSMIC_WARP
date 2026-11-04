@@ -1,22 +1,19 @@
 # API stability
 
-COSMIC WARP is **0.x**: breaking changes are allowed, but never silent. This
-page says what you can build against. Every breaking change to the promised
-surface is listed in the [changelog](changelog.md).
+COSMIC WARP is **0.x**: breaking changes are allowed, never silent. This
+page says what you can build against; every breaking change to it is listed
+in the [changelog](changelog.md).
 
 ## Promised
 
-A change here is a breaking change and gets a changelog entry. Each name is
-promised at the import path shown; nothing else about module layout is.
-Arguments are promised by name, in the order listed, with their defaults
-and meaning; those after a `*` are keyword-only. Below, `sim` is a `SpacecraftSimulator`, `env` a
-`VecEnv`, `rollout` what `sim.differentiable_rollout()` returns, `stepper` a
-`DiffSimStepper` and `diff_env` a `DiffVecEnv`.
-
-`tests/test_stability.py` checks that every name below resolves at its
-import path, that every listed method, attribute, field and key exists with
-the listed arguments in their order and keyword-only status, and that every name `cosmic_warp` and `cosmic_warp.rl`
-export is listed.
+A change here is a breaking change. Each name is promised at the import path
+shown, nothing else about module layout. Arguments are promised by name, in
+the order listed, with their defaults and meaning; those after a `*` are
+keyword-only. `sim` is a `SpacecraftSimulator`, `env` a `VecEnv`, `rollout`
+what `sim.differentiable_rollout()` returns, `stepper` a `DiffSimStepper`,
+`diff_env` a `DiffVecEnv`. `tests/test_stability.py` checks every name,
+argument list, field and key below against the code, and that everything
+`cosmic_warp` and `cosmic_warp.rl` export is listed.
 
 | Surface | Import from | What is promised |
 | --- | --- | --- |
@@ -64,19 +61,17 @@ export is listed.
 | `RlGamesVecEnv(env)`, `register_env(name, env)`, `default_ppo_params(env_name, num_envs, horizon_length, num_minibatches, units, learning_rate, max_epochs, device, train_dir)` | `cosmic_warp.rl.adapters.rl_games` | the same, for rl_games |
 | Conventions | — | everything on [Frames, state and units](../theory/conventions.md): SI units and radians everywhere, ECI and body frames, quaternions stored scalar-last and rotating body to inertial, momenta rather than velocities in the state, environment-major entity order, float64 physics |
 
-Struct fields are promised by name, type and unit; a struct may gain
-fields, and their order is not promised, so construct and read them by
-name. The `default_*` factories and `build_ppo_agent` promise their
-arguments, not their hyperparameter values, which are starting points that
-may be retuned. The adapters follow the trainer versions named in the
-[extras table](../getting-started.md#install); a trainer's own breaking
-change can force an adapter change, which is then listed in the changelog.
-
-Results are promised to be reproducible within a release, on the same
-machine and versions. They are not promised bit for bit across releases: a
-model fix changes trajectories, and a change to the
-[random streams](../theory/sampling.md#random-streams) behind resets and
-randomization changes the draws a seed gives. Both get a changelog entry.
+- Struct fields are promised by name, type and unit; structs may gain
+  fields and their order is not promised, so use names.
+- The `default_*` factories and `build_ppo_agent` promise their arguments,
+  not their hyperparameter values.
+- The adapters follow the trainer versions in the
+  [extras table](../getting-started.md#install); a trainer's breaking change
+  can force an adapter change, listed in the changelog.
+- Results are reproducible within a release on the same machine and
+  versions, not bit for bit across releases: a model fix or a change to the
+  [random streams](../theory/sampling.md#random-streams) changes them, with
+  a changelog entry.
 
 ## Internal
 
@@ -119,7 +114,7 @@ No notice, no changelog entry:
 ## What 1.0 means
 
 From 1.0 the promised surface changes only with a major version. 1.0 is not
-scheduled. It comes once the planned interface changes have landed — the
-external force and torque input and the custom-integrator interface on the
-[roadmap](../roadmap.md) — COSMIC WARP has outside users, and a release
-passes without a breaking change.
+scheduled: it comes once the external force and torque input and the
+custom-integrator interface ([roadmap](../roadmap.md)) have landed,
+COSMIC WARP has outside users, and a release passes without a breaking
+change.

@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 uses [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- Rewrote the README and the documentation site to about half the length:
+  tables and lists in place of prose, each caveat stated once next to the
+  claim it qualifies, status kept to this changelog and the roadmap.
+- Profiling findings (the float64 limit, register spills, the RL step's
+  cost) moved to an experiment record, `docs/data/README.md`, outside the
+  site.
+- Getting started explains installing on systems whose Python is older than
+  3.12, with conda or uv.
+- Fixed stale details: keyword-only `commands=` and reset selections in the
+  theory pages, broken anchors after renamed sections.
+
 ## [0.1.0] - 2026-11-04
 
 First public release, as a **beta**: the public API may change before 1.0,

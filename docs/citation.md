@@ -2,9 +2,9 @@
 
 ## Citation
 
-If you use COSMIC WARP in your research, please cite it. GitHub's "Cite this
-repository" button uses the same metadata, from
-[`CITATION.cff`](https://github.com/Pedro-g-Lima/COSMIC_WARP/blob/main/CITATION.cff):
+If you use COSMIC WARP in your research, please cite it (GitHub's "Cite this
+repository" uses the same
+[`CITATION.cff`](https://github.com/Pedro-g-Lima/COSMIC_WARP/blob/main/CITATION.cff)):
 
 ```bibtex
 @software{cosmic_warp,

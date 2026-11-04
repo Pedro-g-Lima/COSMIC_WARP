@@ -1,8 +1,7 @@
 # References
 
-The physics models, equations and constants documented in the theory pages —
-and the core software the simulator is built on — are drawn from the sources
-below.
+Sources of the models, equations and constants on the theory pages, and of
+the software COSMIC WARP builds on.
 
 ## Gravity, geopotential and astrodynamics
 
