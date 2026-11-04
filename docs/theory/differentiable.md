@@ -1,11 +1,10 @@
 # Differentiable dynamics
 
-A simulator built with `differentiable=True` computes reverse-mode gradients
-of a scalar loss through the integrator — every force model, actuator and
-stage — with respect to the initial state, the per-step commands and the
-vehicle and actuator parameters. The gradients are those of the discrete
-trajectory the simulator computes, exact to rounding away from the
-non-smooth points listed below.
+With `differentiable=True` the simulator computes reverse-mode gradients of
+a scalar loss through every force model, actuator and stage, with respect to
+the initial state, the per-step commands and the parameters: the gradients
+of the discrete trajectory, exact to rounding away from the non-smooth
+points below. Usage: [differentiable rollouts](../guides/differentiable.md).
 
 ## The discrete adjoint
 
@@ -38,56 +37,42 @@ $$
 \boldsymbol{\lambda}_{t+1}.
 $$
 
-One backward sweep gives the gradient with respect to every input, at a cost
-proportional to the forward rollout and independent of the number of inputs.
-The parameter gradient sums the contributions of every step — the total
-sensitivity used for system identification (drag coefficient and area,
-inertia, magnetic dipole, thruster thrust, $I_{sp}$ and geometry, wheel
-parameters). This is the discrete (differentiate-the-scheme) adjoint, not a
-discretization of the continuous adjoint equation: it is the exact
-derivative of what the integrator computes, including its truncation error.
+One backward sweep gives every input's gradient, at a cost proportional to
+the forward rollout. The parameter gradient sums every step's contribution,
+the total sensitivity system identification needs. This is the discrete
+(differentiate-the-scheme) adjoint: the exact derivative of what the
+integrator computes, truncation error included.
 
 ## Implementation
 
 Warp generates the adjoint of each kernel and replays the launches recorded
 on a `wp.Tape` in reverse ([[18]](../references.md#ref-18)).
 [`DifferentiableRollout`](../reference/api/cosmic_warp/core/autodiff.md)
-(`sim.differentiable_rollout(num_steps, commands)`) builds on it:
+(`sim.differentiable_rollout(num_steps, commands=...)`) builds on it:
 
-- **Per-step buffers.** Step $t$ reads buffer $t$ and writes buffer $t+1$
-  instead of updating the state in place, so the backward pass sees every
-  intermediate state. The rollout keeps `num_steps + 1` copies of the state
-  and wheel momenta plus their gradients, about
-  `2 x (num_steps + 1) x num_entities x 144` bytes.
-- **Parameter shadows.** The rollout copies the vehicle, thruster and wheel
-  configurations into arrays with gradients, read at every step. The kernels
-  read both `inertia` and its inverse `inertia_inv`, which is computed when
-  the inertia is set, outside the tape; `rollout.inertia_grad()` combines the
-  two paths through the adjoint of the matrix inverse,
+- **Per-step buffers.** Step $t$ reads buffer $t$ and writes $t+1$, so the
+  backward pass sees every intermediate state
+  ([memory](../guides/differentiable.md#requirements-and-limits)).
+- **Parameter shadows.** The configurations are copied into arrays with
+  gradients. The kernels read both `inertia` and `inertia_inv` (computed
+  outside the tape); `rollout.inertia_grad()` combines the two paths through
+  the adjoint of the inverse,
   $\bar{\mathbf{I}} \mathrel{-}= \mathbf{I}^{-\top}\,\overline{\mathbf{I}^{-1}}\,\mathbf{I}^{-\top}$.
-- **Adjoint-safe kernels.** The integrator kernels are written in
-  single-assignment form with per-field state stores, the patterns Warp's
-  code generation differentiates correctly.
-- **Opt-in compilation.** Adjoint code generation is off by default and is
-  enabled for the chosen integrator's module by `differentiable=True`, so
-  other simulators pay no extra compile time. Forward stepping runs the same
-  kernels either way.
-- **No graph capture.** A taped rollout launches its kernels step by step,
-  eagerly.
+- **Adjoint-safe kernels**: single-assignment form with per-field state
+  stores ([kernel conventions](../guides/extending.md#kernel-conventions)).
+- **Opt-in compilation**: adjoint code is generated only for the chosen
+  integrator's module, only with `differentiable=True`.
 
-The test suite checks the gradients of every integrator against central
-finite differences: initial state, thruster and wheel commands (including
-across a burnout step), and drag, thruster, inertia, magnetic-dipole and
-wheel parameters. [`DiffSimStepper`](../reference/api/cosmic_warp/rl/diff_bridge.md)
-wraps one step as a `torch.autograd.Function` on the same kernels, for
-policy gradients through the dynamics
+Every integrator's gradients are checked against central finite differences
+([validation](../validation/learning.md#differentiable-rollouts)).
+[`DiffSimStepper`](../reference/api/cosmic_warp/rl/diff_bridge.md) wraps one
+step as a `torch.autograd.Function` on the same kernels
 ([differentiable RL](../guides/differentiable-rl.md)).
 
 ## Smoothness caveats
 
-Reverse-mode gradients are exact for the branch the forward pass took. The
-dynamics contain isolated non-smooth points where the derivative is
-one-sided or zero:
+Gradients are exact for the branch the forward pass took. At these
+non-smooth points the derivative is one-sided or zero:
 
 - **Propellant cutoff** at $m = m_{dry}$: once dry, the thrusters produce
   nothing and the gradient through them is zero. $m_{dry}$ enters only
@@ -102,20 +87,15 @@ one-sided or zero:
   [density](environment.md#atmospheric-drag): below altitude 0 the density
   is constant, so drag has no gradient with respect to position there (it
   still depends on velocity).
-- **Termination**: a terminated entity is frozen and has no gradient path,
-  so differentiable rollouts require `check_bounds=False` and
-  `check_planet_impact=False` (they raise otherwise). The
-  [non-finite check](execution.md#termination) cannot be turned off: a NaN
-  or Inf in the state or in a command still terminates the entity inside
-  the rollout, which then carries its last state over unchanged. The rollout keeps its own
-  termination status: the simulator's is not touched.
-
-Away from these points the dynamics are smooth and the gradients are exact.
+- **Termination**: a terminated entity is frozen, with no gradient path, so
+  rollouts require `check_bounds=False` and `check_planet_impact=False`. The
+  [non-finite check](execution.md#termination) stays on: a NaN or Inf in the
+  state or a command freezes the entity at its last state, on the rollout's
+  own termination status, not the simulator's.
 
 **Implementation:**
 [`core/autodiff.py`](../reference/api/cosmic_warp/core/autodiff.md) ·
 [`rl/diff_bridge.py`](../reference/api/cosmic_warp/rl/diff_bridge.md) ·
-usage in the [differentiable rollouts guide](../guides/differentiable.md) ·
 demos in [example 11](../examples/11_gradient_optimization.md) and
 [example 12](../examples/12_system_identification.md)
 

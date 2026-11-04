@@ -5,6 +5,11 @@ repo_url: https://github.com/Pedro-g-Lima/COSMIC_WARP
 repo_name: Pedro-g-Lima/COSMIC_WARP
 edit_uri: edit/main/docs/
 
+# The experiment record is read on GitHub, not published: without this it is
+# built as an orphan page (mkdocs only logs INFO, even under --strict).
+exclude_docs: |
+  data/README.md
+
 theme:
   name: material
   icon:

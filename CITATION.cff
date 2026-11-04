@@ -10,6 +10,13 @@ authors:
     given-names: "Aman"
     affiliation: "University of Luxembourg, SnT, SpaceR"
 version: 0.1.0
+date-released: "2026-11-04"
+# Concept DOI: resolves to the latest version on Zenodo
+doi: "10.5281/zenodo.23950779"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23950780"
+    description: "Version 0.1.0"
 license: Apache-2.0
 repository-code: "https://github.com/Pedro-g-Lima/COSMIC_WARP"
 url: "https://pedro-g-lima.github.io/COSMIC_WARP/"

@@ -1,10 +1,8 @@
 """Parallel Monte Carlo
 
-Propagates 100 000 spacecraft at once from dispersed initial conditions and
-summarizes where they end up. The initial states are drawn with NumPy on the
-host; the propagation of the whole population is a single batched call,
-`sim.simulate_monte_carlo`, which keeps only the final states (no trajectory
-storage).
+Propagates 100 000 spacecraft from dispersed initial conditions, drawn
+with NumPy, in one `sim.simulate_monte_carlo` call, which keeps only the
+final states.
 
 - Nominal orbit: 7000 km radius, circular speed, 100 kg
 - Dispersions: radius 500 km and speed 100 m/s (1-sigma), starting latitude
@@ -24,11 +22,10 @@ Options: `--num-envs`, `--num-steps`, `--dt`, `--device`, `--seed`
 
 ![Parallel Monte Carlo](../assets/examples/monte_carlo_analysis.png)
 
-**What to look for:** about 18 % of the population terminates. Most of these
-start below the impact radius (a 500 km radial spread puts about 15 % of the
-draws under it) and stay frozen where they terminated, which gives the spike
-at about 6470 km in the radius histogram. The default run is 5e9
-spacecraft-steps; on a desktop GPU (RTX 4070 Ti SUPER) it takes about 14 s.
+**What to look for:** about 18 % of the population terminates, most of it
+drawn below the impact radius (about 15 % of the draws) and frozen there:
+the spike near 6470 km in the radius histogram. The default 5e9
+spacecraft-steps take about 14 s on an RTX 4070 Ti SUPER.
 """
 
 import argparse

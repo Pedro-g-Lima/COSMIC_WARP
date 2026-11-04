@@ -1,8 +1,7 @@
 # Environment models
 
-The magnetic field and the atmosphere: the environmental perturbations
-beyond gravity. Both are epoch-free: the Earth does not rotate under the
-inertial frame, except that the atmosphere co-rotates with it.
+The magnetic field and the atmosphere. Both are epoch-free; only the
+atmosphere co-rotates with the Earth.
 
 ## Magnetic dipole field
 
@@ -15,16 +14,13 @@ $$
 - \hat{\mathbf{m}} \,\right]
 $$
 
-(zero at $r = 0$), with equatorial surface strength
-$B_0 = 3.12 \times 10^{-5}\ \mathrm{T}$ ([[9]](../references.md#ref-9)) and
-$R_\oplus = 6\,378\,136.3\ \mathrm{m}$, the same radius as the gravity model
-(`RE_MAG = RE_EARTH`). The dipole axis $\hat{\mathbf{m}} = -\hat{\mathbf{z}}$
-is fixed in the inertial frame: magnetic north is at the geographic south
-pole, so at the equator $\mathbf{B}$ points along $+\hat{\mathbf{z}}$
-(northward) with magnitude $B_0 (R_\oplus/r)^3$, and over the poles it is
-twice as strong. The ~11° tilt of the real dipole and its rotation with the
-Earth are not modelled; they need a simulation epoch (see the
-[roadmap](../roadmap.md)).
+(zero at $r = 0$), with $B_0 = 3.12 \times 10^{-5}\ \mathrm{T}$
+([[9]](../references.md#ref-9)) and the gravity model's $R_\oplus$
+(`RE_MAG = RE_EARTH`). The axis $\hat{\mathbf{m}} = -\hat{\mathbf{z}}$ is
+fixed in the inertial frame, so at the equator $\mathbf{B}$ points north
+($+\hat{\mathbf{z}}$) with magnitude $B_0 (R_\oplus/r)^3$, twice that over
+the poles. The real dipole's ~11° tilt and rotation need an epoch and are
+not modelled.
 
 ### Magnetic torque
 
@@ -56,15 +52,13 @@ $$
 \qquad h = r - R_\oplus,
 $$
 
-using the band with the largest $h_0 \le h$. Altitude is geometric above a
-spherical Earth. Below sea level ($h < 0$) the density is held at the
-sea-level value $1.225\ \mathrm{kg/m^3}$ rather than extrapolated: a
-trajectory inside the Earth keeps a finite drag force (stop it with the
-`planet_radius` termination), and the density has zero gradient with respect
-to position there. Above 1000 km the last band ($H = 268$ km) is
-extrapolated. At a band edge the density jumps where the table's nominal
-$\rho_0$ does not exactly continue the band below (by 0.14 % at 25 km, under
-0.01 % elsewhere), and its slope changes with the scale height.
+using the band with the largest $h_0 \le h$, on the geometric altitude
+above a spherical Earth. Below sea level the density is held at
+$1.225\ \mathrm{kg/m^3}$ (finite drag, zero gradient with respect to
+position; stop such trajectories with `planet_radius`). Above 1000 km the
+last band ($H = 268$ km) is extrapolated. At a band edge the density jumps
+where the table's $\rho_0$ does not continue the band below (0.14 % at
+25 km, under 0.01 % elsewhere), and its slope changes.
 
 The atmosphere co-rotates with the Earth at
 $\omega_\oplus = 7.2921159 \times 10^{-5}\ \mathrm{rad/s}$ about inertial
@@ -80,17 +74,15 @@ $$
 \lVert \mathbf{v}_{rel} \rVert\, \mathbf{v}_{rel}.
 $$
 
-$C_d$ and the cross-sectional area $A$ are per-vehicle constants (`cd`,
-`area_drag`, default 2.2 and 1 m²), independent of attitude. Drag is enabled
-by `drag=True` (off by default). For a circular orbit whose velocity is
-parallel to $\mathbf{v}_{rel}$ (equatorial, prograde), the secular decay of
-the semi-major axis is
+$C_d$ and $A$ are per-vehicle constants (`cd`, `area_drag`), independent of
+attitude. For a circular equatorial prograde orbit the semi-major axis
+decays at
 
 $$
 \frac{da}{dt} = -\rho\, \frac{C_d A}{m}\, v_{rel}^2 \sqrt{\frac{a^3}{\mu}},
 $$
 
-checked against the simulator at 400 km in the test suite.
+([checked](../validation/physics.md#atmospheric-drag) at 400 km).
 
 **Implementation:**
 [`physics/drag.py`](../reference/api/cosmic_warp/physics/drag.md)

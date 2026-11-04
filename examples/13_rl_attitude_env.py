@@ -15,11 +15,10 @@ trainer's inner loop.
 - compares an uncontrolled rollout with the controlled one from identical
   initial conditions (same seed)
 
-This is not learning: it shows that the environment works, that the reward
-responds to control, and that the step is fast. Replace the kernel with a
-neural-network policy (through the zero-copy torch views) to train, as in
-[example 14](14_rl_rsl_training.md). See the
-[reinforcement learning guide](../guides/rl.md) for the environment API.
+This is not learning: it shows the environment works, the reward responds
+to control, and the step is fast. Training replaces the kernel with a
+network ([example 14](14_rl_rsl_training.md),
+[RL guide](../guides/rl.md)).
 
 ```bash
 python examples/13_rl_attitude_env.py
@@ -28,12 +27,11 @@ python examples/13_rl_attitude_env.py --num-envs 65536 --gain 4
 
 Options: `--num-envs`, `--steps`, `--gain`, `--device`.
 
-**What to look for:** over the default 1000 steps (100 s) the controlled
-mean body rate falls from about 0.54 rad/s to about 0.002 rad/s, while the
-uncontrolled one stays at 0.54 rad/s. The printed throughput is tens of
-millions of env-steps/s on a desktop GPU (about 40 M with the default 4096
-environments on an RTX 4070 Ti SUPER, more with more environments); the
-first run is slower because it includes compiling the policy kernel.
+**What to look for:** over 1000 steps (100 s) the controlled mean body rate
+falls from about 0.54 to 0.002 rad/s; uncontrolled it stays at 0.54. The
+printed throughput is about 40 M env-steps/s with 4096 environments on an
+RTX 4070 Ti SUPER (more with more environments; the first run includes
+compilation).
 """
 import argparse
 import time

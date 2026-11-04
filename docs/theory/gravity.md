@@ -1,6 +1,6 @@
 # Gravity & J2
 
-Earth is the only central body. Its constants come from EGM2008
+Earth's constants come from EGM2008
 ([[1]](../references.md#ref-1)) and are module constants of
 [`physics/gravity.py`](../reference/api/cosmic_warp/physics/gravity.md):
 
@@ -10,8 +10,7 @@ Earth is the only central body. Its constants come from EGM2008
 | `RE_EARTH`, $R_\oplus$ | $6\,378\,136.3\ \mathrm{m}$ |
 | `J2_EARTH`, $J_2$ | $1.08262617385222 \times 10^{-3}$ |
 
-The dynamics always use $\mu_\oplus$, and orbit specifications take no
-other `mu` (a configurable central body is on the [roadmap](../roadmap.md)).
+Earth is the only central body ([physics models](../guides/physics.md#what-each-model-assumes)).
 
 ## Point-mass gravity
 
@@ -51,11 +50,10 @@ $$
 \dot{\omega} = \frac{3}{4}\, n J_2 \left(\frac{R_\oplus}{p}\right)^2 (5\cos^2 i - 1),
 $$
 
-with $n = \sqrt{\mu/a^3}$ and $p = a(1-e^2)$. Both rates are checked against
-the simulator in the test suite. The
-[J2 comparison example](../examples/08_j2_comparison.md) shows the
-short-period effects (altitude and inclination oscillating once and twice per
-orbit) over a run too short for the secular drift to be visible.
+with $n = \sqrt{\mu/a^3}$ and $p = a(1-e^2)$
+([checked](../validation/physics.md#j2-oblateness)). The
+[J2 example](../examples/08_j2_comparison.md) shows the short-period
+effects.
 
 ## Gravity-gradient torque
 
@@ -69,11 +67,8 @@ $$
 \hat{\mathbf{r}}_b = R(q)^{\top}\,\frac{\mathbf{r}}{r},
 $$
 
-the unit position vector rotated into the body frame. It drives the
-minimum-inertia axis towards the local vertical, the principle of
-gravity-gradient stabilization. It is enabled by `gravity_gradient=True`
-(off by default), independently of the `gravity` flag, and always uses
-$\mu_\oplus$.
+It drives the minimum-inertia axis towards the local vertical. Enabled by
+`gravity_gradient=True`, independently of `gravity`.
 
 **Implementation:**
 [`physics/gravity.py`](../reference/api/cosmic_warp/physics/gravity.md)

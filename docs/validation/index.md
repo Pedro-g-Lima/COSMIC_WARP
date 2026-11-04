@@ -1,28 +1,20 @@
 # Validation
 
-Why you can trust the numbers. Every claim on these pages is checked by a
-test, and each table names the file that runs it, under
-[`tests/`](https://github.com/Pedro-g-Lima/COSMIC_WARP/tree/main/tests). Each tolerance
-is the bound the test asserts; "measured" values are the ones recorded in
-the test file. [Benchmarks](../benchmarks.md), listed alongside, is the
-exception: it reports measured throughput, not test-checked claims.
+Every claim on these pages is checked by a test, and each table names the
+file under [`tests/`](https://github.com/Pedro-g-Lima/COSMIC_WARP/tree/main/tests)
+that runs it. Tolerances are the bounds the tests assert; "measured" values
+are those recorded in the test file. [Benchmarks](../benchmarks.md) is the
+exception: measured throughput, not test-checked claims.
 
-The evidence answers three questions:
+| Question | Checked against |
+| --- | --- |
+| Are the models and integrators right? | closed forms (Kepler, J2 secular rates, torque-free precession, the rocket equation, Clohessy–Wiltshire); otherwise invariants, an independent fine-step integration, or the integrators against each other |
+| Does the machinery change the answer? | eager execution for graph replay; the specified semantics for termination and resets; the distributions for random draws |
+| Are the learning interfaces exact? | NumPy recomputation and twin environments; central finite differences for gradients |
 
-- **Are the models and integrators right?** Checked against closed-form
-  results: the Kepler solution, J2 secular rates, torque-free precession,
-  the rocket equation, Clohessy–Wiltshire relative motion. Where there is no
-  closed form, against invariants, an independent fine-step integration, or
-  the integrators against each other.
-- **Does the machinery change the answer?** CUDA-graph replay against eager
-  execution, termination and resets against their specified semantics,
-  random draws against their distributions.
-- **Are the learning interfaces exact?** Transitions against a NumPy
-  recomputation and twin environments; gradients against central finite
-  differences.
-
-Not one of these validates a real spacecraft: the models are checked against
-the equations they implement, and the parameters are the user's.
+None of this validates a real spacecraft: the models are checked against the
+equations they implement, and the parameters are yours. All physics checks
+run in float64.
 
 ## Summary
 
@@ -56,60 +48,44 @@ the equations they implement, and the parameters are the user's.
 
 ## CI and local GPU checks
 
-GitHub's runners have no GPU, so CI runs the suite on Warp's CPU backend
+GitHub's runners have no GPU, so CI runs on Warp's CPU backend
 (`.github/workflows/tests.yml`):
 
-- **Physics job**: `pytest --device cpu` on Python 3.12 and 3.14 with the
-  `dev` group's pinned tools and Warp, without torch. The torch-dependent
-  tests skip.
-- **Dependency range**: the same suite at both ends of the runtime
-  requirements — Python 3.12 with Warp 1.15.0, NumPy 2.0.2 and PyYAML
-  6.0.1, and Python 3.14 with the newest releases — with the bit-exact
-  golden trajectories deselected.
-- **Wheel**: the built wheel installed alone in a fresh environment and
-  run from outside the checkout (`tests/wheel_smoke.py`).
-- **RL job**: CPU torch with rsl_rl, skrl and rl_games, Python 3.12, running
-  `tests/test_rl_env.py`, `tests/test_rl_diff_env.py`,
-  `tests/test_example_shac.py`, the three adapter files,
-  `tests/test_docs.py` and `tests/test_examples.py` (so the snippets and
-  examples that need torch run too), with the skip reasons printed (`-rs`).
+| Job | Runs |
+| --- | --- |
+| Physics | `pytest --device cpu` on Python 3.12 and 3.14 with the `dev` group's pinned tools, without torch |
+| Dependency range | the same suite at both ends of the requirements (Python 3.12 with Warp 1.15.0, NumPy 2.0.2, PyYAML 6.0.1; Python 3.14 with the newest), golden trajectories deselected |
+| Wheel | the built wheel, installed alone, run from outside the checkout (`tests/wheel_smoke.py`) |
+| RL | CPU torch with rsl_rl, skrl and rl_games on Python 3.12: `tests/test_rl_env.py`, `tests/test_rl_diff_env.py`, `tests/test_example_shac.py`, the three adapter files, `tests/test_docs.py`, `tests/test_examples.py`, skip reasons printed |
 
-These tests skip on CPU in both jobs and are verified by running the suite
-on a local GPU, so read them as *locally verified*, not *continuously
-verified*:
+*Locally verified* on a GPU, not continuously (they skip on CPU):
 
 - multi-body graph replay against eager execution (`tests/test_termination.py`);
 - capture of `simulate()` with every feature on (`tests/test_hot_loop.py`);
 - `VecEnv` graph replay against eager stepping (`tests/test_rl_env.py`);
 - the four training runs, marked `slow`: PPO through each adapter and SHAC.
 
-On CPU, `simulate()` runs its kernels eagerly; on CUDA it replays a captured
-graph. Every test that calls `simulate()` (orbits, J2, drag, wheels,
-randomization and orbit sampling inside auto-reset) therefore checks graph
-replay only on the GPU.
-
-Reproduce everything:
+On CPU `simulate()` runs eagerly, so every test that calls it (orbits, J2,
+drag, wheels, auto-reset sampling) checks graph replay only on the GPU.
 
 ```bash
 pytest --device cuda                  # or --device cpu
 pytest --device cuda -m "not slow"    # without the training runs
 ```
 
-All physics checks run in float64, the simulator's only precision.
-
 ## Not yet validated
 
 | Gap | Status |
 | --- | --- |
-| User forces and torques; custom integrators | Not supported yet (planned for 1.x), so not validated |
-| Central bodies other than Earth | Not configurable: orbit specs take no `mu` |
-| Events inside a step | Not located: wheel saturation caps every integrator at [order 2](numerics.md#order-of-convergence), and burnout leaves an [O(dt²) position error](physics.md#thrusters-and-the-rocket-equation) once per burnout. Both are measured, neither is removed |
-| Gradients at actuator limits | Gradient checks stay inside the actuator ranges; derivatives at the throttle clamp and at wheel saturation are kinks and are not checked (see [smoothness caveats](../theory/differentiable.md)) |
-| Magnetic field against a real field model | Only the aligned dipole the code implements; no comparison with IGRF |
-| Density table against the published table | The test reads the table from the code, so a wrong value would pass |
-| J2 beyond the first-order secular rates | Short-period terms and higher harmonics are not compared |
-| Long-horizon integrator behaviour | Invariants are checked over one orbit or a few seconds, not over many orbits |
-| Distribution of randomized vehicle parameters | Only bounds and couplings; distributions are tested for reset states |
-| Learning beyond a detumble task | Only short, seeded detumble runs on a GPU, each required to cut the body rate by at least 40 % |
-| Multi-body trainer adapters | Not supported: the adapters raise `NotImplementedError` |
-| Throughput on full-rate FP64 GPUs | Not measured; see [benchmarks](../benchmarks.md) |
+| User forces and torques; custom integrators | not supported yet ([roadmap](../roadmap.md)) |
+| Central bodies other than Earth | not configurable: orbit specs take no `mu` |
+| Events inside a step | not located: wheel saturation caps every integrator at [order 2](numerics.md#order-of-convergence); burnout leaves an [O(dt²) position error](physics.md#thrusters-and-the-rocket-equation). Both measured, neither removed |
+| Gradients at actuator limits | checks stay inside the actuator ranges; the throttle clamp and wheel saturation are kinks ([smoothness caveats](../theory/differentiable.md#smoothness-caveats)) |
+| Magnetic field | only the aligned dipole the code implements; no IGRF comparison |
+| Density table | read from the code by the test, so a wrong table value would pass |
+| J2 beyond first-order secular rates | short-period terms and higher harmonics not compared |
+| Long horizons | invariants checked over one orbit or a few seconds |
+| Distribution of randomized vehicle parameters | only bounds and couplings (distributions are tested for reset states) |
+| Learning beyond detumble | only short, seeded detumble runs on a GPU, each required to cut the body rate by at least 40 % |
+| Multi-body trainer adapters | not supported: they raise `NotImplementedError` |
+| Throughput on full-rate FP64 GPUs | not measured ([benchmarks](../benchmarks.md)) |

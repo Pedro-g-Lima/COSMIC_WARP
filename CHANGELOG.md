@@ -4,6 +4,33 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
 uses [semantic versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- `VecEnv.step` ends an environment whose action has a NaN or Inf component
+  (termination reason 6, state unchanged) whatever the task does with the
+  action. Before, a task that clamped or ignored actions turned a non-finite
+  action into a finite command and the episode went on.
+
+### Documentation
+
+- Citation: Zenodo DOI [10.5281/zenodo.23950779](https://doi.org/10.5281/zenodo.23950779)
+  (all versions; 0.1.0 is 10.5281/zenodo.23950780) in `CITATION.cff`, the
+  README badge and the BibTeX entries.
+- Shortened the README and the documentation site (prose by about a third):
+  tables and lists in place of paragraphs, each caveat stated once next to
+  the claim it qualifies, status kept to this changelog and the roadmap.
+  Every tested claim, number and link stays.
+- Profiling findings (the float64 limit, register spills, the RL step's
+  cost) moved to an experiment record, `docs/data/README.md`, outside the
+  site.
+- Getting started explains installing where the system Python is older than
+  3.12, with conda or uv.
+- Fixed stale details: keyword-only `commands=` and reset selections in the
+  theory pages; validation rows name the `*_per_entity` setters instead of
+  "batched" ones.
+
 ## [0.1.0] - 2026-11-04
 
 First public release, as a **beta**: the public API may change before 1.0,

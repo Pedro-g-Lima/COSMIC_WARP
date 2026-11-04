@@ -1,15 +1,14 @@
 # Frames, state and units
 
-Every kernel, configuration key and result array follows the conventions on
-this page. If a number looks wrong, check it against this page first.
+Every kernel, configuration key and result array follows these
+conventions.
 
 ## Environments, bodies and entities
 
-A simulator holds `num_envs` independent **environments**, each with
-`num_bodies` rigid **bodies**. Every per-body quantity (state, vehicle
-parameters, actuator configuration, commands, trajectories) is stored in one
-flat device array of `num_entities = num_envs * num_bodies` **entities**,
-environment-major:
+A simulator holds `num_envs` independent **environments** of `num_bodies`
+rigid **bodies** each. Every per-body quantity (state, parameters, commands,
+trajectories) is one flat device array of
+`num_entities = num_envs * num_bodies` **entities**, environment-major:
 
 ```
 entity_id = env_id * num_bodies + body_id
@@ -28,18 +27,15 @@ positions = sim.get_positions().numpy()        # [num_entities, 3], ECI [m]
 assert positions.shape == (sim.num_entities, 3)
 ```
 
-Bodies of one environment do not interact physically: there are no
-inter-body forces, so each entity is integrated on its own. They share
-**termination** (when one body violates a limit, the whole environment
-terminates, see [Termination](execution.md#termination)) and, in the RL
-layer, one row of the per-environment tensors. Selections such as
-`env_ids` and `body_ids` expand to entity ids by the rule above
+Bodies of one environment exert no forces on each other; each entity is
+integrated on its own. They share [termination](execution.md#termination)
+and, in the RL layer, one row of the per-environment tensors. `env_ids` and
+`body_ids` expand to entity ids by the rule above
 ([`core/entities.py`](../reference/api/cosmic_warp/core/entities.md)).
 
 ## Units
 
-SI everywhere, angles in radians, in the Python API, the YAML files, the
-kernels and the results.
+SI everywhere, angles in radians: API, YAML, kernels and results.
 
 | Quantity | Unit |
 | --- | --- |
@@ -58,17 +54,14 @@ kernels and the results.
 
 ## Frames
 
-**Inertial frame (ECI).** Earth-centred and non-rotating. Its $+z$ axis is
-Earth's rotation axis: the J2 field is symmetric about it, the atmosphere
-rotates about it, and the magnetic dipole points along $-z$. There is no
-simulation epoch, so $x$ and $y$ are not tied to the vernal equinox and the
-Earth's surface has no longitude. Positions and linear momenta are expressed
-here, and every force is summed here.
+**Inertial frame (ECI).** Earth-centred, non-rotating. $+z$ is Earth's
+rotation axis: J2 is symmetric about it, the atmosphere rotates about it,
+the magnetic dipole points along $-z$. There is no simulation epoch, so $x$
+and $y$ are not tied to the vernal equinox and the surface has no
+longitude. Forces are summed here.
 
-**Body frame.** Fixed in the body, origin at its centre of mass. The inertia
-tensor, thruster positions and directions, reaction-wheel spin axes, the
-residual magnetic dipole, and the body angular momentum are expressed here;
-all torques are summed here.
+**Body frame.** Fixed in the body, origin at the centre of mass. Torques are
+summed here.
 
 | Quantity | Frame |
 | --- | --- |
@@ -97,13 +90,11 @@ It carries **momenta, not velocities**:
 | `ang_mom` | $\mathbf{L} = \mathbf{I}\boldsymbol{\omega}$ | angular momentum of the body **alone** (wheel momenta excluded), body frame [kg·m²/s] |
 | `rw_ang_mom` | $h_k$ | momentum of wheel $k$ about its spin axis [kg·m²/s] |
 
-Velocities are derived: $\mathbf{v} = \mathbf{p} / \max(m, m_{dry})$ and
-$\boldsymbol{\omega} = \mathbf{I}^{-1}\mathbf{L}$ (`get_velocities()`,
-`get_angular_velocities()`, and the `velocities` and `angular_velocities`
-trajectories of `simulate()`). Every input named `momenta`,
-`angular_momenta`, `mom_bounds` or `ang_mom_bounds`, and the `mom_limit` and
-`ang_mom_limit` termination limits, refer to $\mathbf{p}$ and the body-only
-$\mathbf{L}$.
+Velocities are derived: $\mathbf{v} = \mathbf{p} / \max(m, m_{dry})$,
+$\boldsymbol{\omega} = \mathbf{I}^{-1}\mathbf{L}$ (the velocity getters and
+trajectories). Inputs named `momenta`, `angular_momenta`, `mom_bounds`,
+`ang_mom_bounds`, and the limits `mom_limit` and `ang_mom_limit`, refer to
+$\mathbf{p}$ and the body-only $\mathbf{L}$.
 
 Other symbols used across the theory pages:
 
@@ -138,29 +129,24 @@ assert np.isclose(np.linalg.norm(x_body_in_eci), 1.0)
 ```
 
 The integrators renormalize $q$ after every update. $q$ and $-q$ are the
-same attitude; the state is not canonicalized to one hemisphere (do it where
-a unique representative matters, e.g. observations, as the example
-attitude task does with $q_w \ge 0$).
+same attitude and the state is not canonicalized; do it where a unique
+representative matters (the example attitude task observes $q_w \ge 0$).
 
 ## Precision
 
-The state, every physics and integrator kernel, and the adjoints of
-differentiable rollouts are **float64**, and so are the uniform random
-draws behind resets and domain randomization (53 random bits each). One
-place is float32 by design: the RL boundary tensors (actions, observations,
-rewards) of `VecEnv`.
+**Float64** throughout: state, physics and integrator kernels, adjoints,
+and the uniform draws behind resets and randomization (53 random bits).
+Only `VecEnv`'s actions, observations and rewards are float32.
 
 ## Architecture
 
-The layers, from the top: the learning interfaces in `cosmic_warp.rl`
-(`VecEnv`, `DiffVecEnv`, the trainer adapters) and `DifferentiableRollout`
-drive a `SpacecraftSimulator`. Its managers (vehicles, thrusters, reaction
-wheels, resets, domain randomization, termination) own the configuration and
-write it into device arrays, which
+`cosmic_warp.rl` (`VecEnv`, `DiffVecEnv`, the adapters) and
+`DifferentiableRollout` drive a `SpacecraftSimulator`. Its managers
+(vehicles, thrusters, wheels, resets, randomization, termination) write the
+configuration into device arrays, which
 [`SimContext`](../reference/api/cosmic_warp/core/context.md) bundles for the
-integrator. Each step is one kernel launch that evaluates the force and
-torque models, the actuators, the integration update and the termination
-check for every entity — drawn on [GPU execution](execution.md#the-step-on-the-device).
+integrator's one kernel launch per step
+([GPU execution](execution.md#the-step-on-the-device)).
 
 **Implementation:**
 [`core/state.py`](../reference/api/cosmic_warp/core/state.md) ·

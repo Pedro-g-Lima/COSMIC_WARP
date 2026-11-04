@@ -19,9 +19,8 @@ pip install "cosmic-warp[rl-games]"      # rl-games + torch
 python examples/16_rl_rlgames_training.py
 ```
 
-Options: `--num-envs`, `--epochs`, `--w-att`, `--device`. By default it
-trains the pure-detumble task (`--w-att 0`); a nonzero `--w-att` adds the
-harder attitude-regulation term (full repointing). See the
+Options: `--num-envs`, `--epochs`, `--w-att`, `--device`. Default task: detumble
+(`--w-att 0`); a nonzero `--w-att` adds repointing. See the
 [reinforcement learning guide](../guides/rl.md) for the adapters.
 
 **What to look for:** the mean tumble rate drops from about 0.54 rad/s with

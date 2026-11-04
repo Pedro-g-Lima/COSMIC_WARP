@@ -23,14 +23,11 @@ Options: `--num-steps`, `--dt`, `--iters`, `--obs-every`, `--true-cd`,
 
 ![System identification](../assets/examples/system_identification.png)
 
-**What to look for:** the estimate contracts geometrically (a straight line
-on the log plot), by a factor of about 5 per iteration, from a 36 % initial
-error to a relative error of about $10^{-11}$ in 15 iterations; each one is
-a forward and an adjoint rollout of the 500-step trajectory. The script
-reports convergence against `--tol` (relative error $10^{-9}$ by default).
-The step size is set once, from the first gradient, assuming the loss is
-quadratic in the parameter; the steady factor-of-5 contraction shows that
-assumption holds closely here.
+**What to look for:** the error contracts by a factor of about 5 per
+iteration, from 36 % to about $10^{-11}$ in 15 iterations (convergence is
+reported against `--tol`, $10^{-9}$ by default). The step size is set once
+from the first gradient, assuming a quadratic loss; the steady contraction
+shows that holds here.
 """
 
 import argparse

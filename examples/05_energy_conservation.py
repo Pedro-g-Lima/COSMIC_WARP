@@ -1,17 +1,9 @@
 """Energy conservation
 
 Propagates one spacecraft on a circular 7000 km two-body orbit (J2 off, so
-the total mechanical energy is an exact invariant) with each integrator and
-tracks the energy error over a long horizon:
-
-- Euler (1st order)
-- RK4 (4th order)
-- Symplectic (2nd order, structure-preserving)
-
-The default run is 1 000 000 steps of 1 s per integrator, about 278 hours or
-170 orbits. The energy is sampled on the host every `--sample-interval` steps
-and compared in four panels: total energy, relative error, a close-up of RK4
-against symplectic, and the final drift on a log scale.
+the energy is an exact invariant) with Euler, RK4 and symplectic for
+1 000 000 steps of 1 s (about 170 orbits), sampling the energy every
+`--sample-interval` steps.
 
 ```bash
 python examples/05_energy_conservation.py
@@ -22,12 +14,10 @@ Options: `--num-steps`, `--dt`, `--device`, `--sample-interval`, `--no-show`.
 
 ![Energy conservation](../assets/examples/energy_conservation_comparison.png)
 
-**What to look for:** Euler's energy error grows secularly, to about +50 %
-by the end of the run (the orbit spirals outward). RK4 and symplectic both
-stay within about 1e-12 relative error, at round-off level: at this step size
-neither drifts measurably. The symplectic error oscillates within a band,
-the behaviour that keeps it bounded over very long runs; RK4 has no
-such guarantee, and its error grows with the step size.
+**What to look for:** Euler's energy error grows to about +50 % (the orbit
+spirals outward). RK4 and symplectic stay near 1e-12, at round-off. The
+symplectic error oscillates within a band, which keeps it bounded over very
+long runs; RK4 has no such guarantee.
 """
 
 import argparse

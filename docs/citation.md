@@ -2,9 +2,9 @@
 
 ## Citation
 
-If you use COSMIC WARP in your research, please cite it. GitHub's "Cite this
-repository" button uses the same metadata, from
-[`CITATION.cff`](https://github.com/Pedro-g-Lima/COSMIC_WARP/blob/main/CITATION.cff):
+If you use COSMIC WARP in your research, please cite it (GitHub's "Cite this
+repository" uses the same
+[`CITATION.cff`](https://github.com/Pedro-g-Lima/COSMIC_WARP/blob/main/CITATION.cff)):
 
 ```bibtex
 @software{cosmic_warp,
@@ -12,6 +12,7 @@ repository" button uses the same metadata, from
   author  = {Lima, Pedro and Arora, Aman},
   year    = {2026},
   version = {0.1.0},
+  doi     = {10.5281/zenodo.23950779},
   url     = {https://github.com/Pedro-g-Lima/COSMIC_WARP}
 }
 ```

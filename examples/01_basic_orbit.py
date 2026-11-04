@@ -1,17 +1,13 @@
 """Basic orbit
 
-Propagates ten 100 kg spacecraft in parallel on circular two-body orbits of
-7000 km radius (gravity on, J2 off), records the full trajectory, and plots it.
-It covers the basic workflow:
+Propagates ten 100 kg spacecraft on circular 7000 km two-body orbits
+(J2 off), records the trajectory and plots it: the basic workflow of
+`SpacecraftSimulator`, `reset_to_conditions`, `simulate(..., save_states=True)`
+and reading the trajectory back.
 
-- creating a `SpacecraftSimulator`
-- setting initial conditions with `reset_to_conditions`
-- running `simulate(..., save_states=True)` and timing it
-- reading the trajectory back for plotting
-
-The spacecraft start evenly spaced around the equator, each moving due north,
-so each flies its own polar orbit. The default run covers 500 s (50 000 steps
-of 0.01 s with RK4), a short arc of the roughly 97-minute orbit.
+The spacecraft start evenly spaced around the equator, each moving due
+north, so each flies its own polar orbit. The default run is 500 s (50 000
+RK4 steps of 0.01 s), a short arc of the 97-minute orbit.
 
 ```bash
 python examples/01_basic_orbit.py
@@ -29,9 +25,8 @@ animation of spacecraft 0 is also shown.
 
 ![Radius, speed and mass of spacecraft 0](../assets/examples/orbital_altitude_velocity.png)
 
-**What to look for:** each trajectory is an arc of a polar orbit. The orbit
-altitude and the speed stay constant to round-off over
-the run (within about 1e-7 m and 1e-10 m/s), and the mass stays at 100 kg.
+**What to look for:** altitude and speed stay constant to round-off
+(about 1e-7 m and 1e-10 m/s), and the mass stays at 100 kg.
 """
 
 import argparse

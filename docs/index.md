@@ -14,33 +14,26 @@ pip install cosmic-warp
 
 </div>
 
-COSMIC WARP is the simulator, not the application. Guidance, control and
-training algorithms are yours; the simulator gives them a batched,
-on-device spacecraft model to run against.
+COSMIC WARP is the simulator, not the application: guidance, control and
+training algorithms are yours.
 
 ## What you get
 
-- **6-DOF dynamics with variable mass** — orbit and attitude in float64,
-  point-mass gravity, J2, atmospheric drag, gravity-gradient and magnetic
-  torques, each switched on or off. Euler, RK4 (default) and a symplectic
-  kick–drift–kick integrator.
-- **Actuators** — up to 8 thrusters with propellant use and 4 reaction wheels
-  with friction and momentum saturation per spacecraft.
-- **Batches on the device** — environments with one or several spacecraft,
+- **6-DOF dynamics** with variable mass, in float64; Euler, RK4 (default) or
+  symplectic kick–drift–kick.
+- **[Physics models](guides/physics.md)**: point-mass gravity, J2,
+  atmospheric drag, gravity-gradient and magnetic torques, each switchable.
+- **[Actuators](guides/actuators.md)**: up to 8 thrusters and 4 reaction
+  wheels per spacecraft.
+- **Batches on the device**: one or several spacecraft per environment,
   sampled resets, domain randomization and termination, all inside the
-  captured step: no host round trip in the loop.
-- **Scenarios in YAML** — a whole scenario in one strictly checked file.
-- **Learning** — a vectorized [RL environment](guides/rl.md) with adapters for
-  rsl_rl, skrl and rl_games, and [differentiable rollouts](guides/differentiable.md)
-  with gradients for initial states, controls and vehicle parameters.
-- **Evidence** — the physics is tested against analytic solutions: Kepler
-  orbits, J2 secular rates, torque-free rotation, Hohmann transfers,
-  Tsiolkovsky burns, Clohessy–Wiltshire motion. See [Validation](validation/index.md).
-
-Earth is the only central body, and the field and atmosphere models are
-simple ones; [Physics models](guides/physics.md) states what is modelled and
-the [Roadmap](roadmap.md) what is planned. Version 0.1 is a beta: the API may
-change before 1.0.
+  captured step.
+- **[Scenarios in YAML](guides/configuration.md)**, strictly checked.
+- **Learning**: a vectorized [RL environment](guides/rl.md) with adapters for
+  rsl_rl, skrl and rl_games, and [gradients](guides/differentiable.md)
+  through the dynamics.
+- **[Validation](validation/index.md)**: every claim names the test that
+  checks it, against analytic results where they exist.
 
 ## Where to start
 
@@ -50,8 +43,7 @@ change before 1.0.
 
     ---
 
-    Install, propagate a batch of spacecraft, fire a thruster, load a YAML
-    scenario.
+    Install, propagate a batch, fire a thruster, load a YAML scenario.
 
     [:material-arrow-right: Start here](getting-started.md)
 
@@ -77,8 +69,7 @@ change before 1.0.
 
     ---
 
-    Every physics claim with the test that checks it, against analytic
-    solutions.
+    Every claim with the test that checks it.
 
     [:material-arrow-right: See the evidence](validation/index.md)
 

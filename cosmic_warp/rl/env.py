@@ -26,7 +26,7 @@ import warp as wp
 
 from cosmic_warp.core import validation
 from cosmic_warp.core.pipeline import SpacecraftSimulator
-from cosmic_warp.core.termination import TerminationStatus
+from cosmic_warp.core.termination import REASON_NONFINITE, TerminationStatus
 from cosmic_warp.rl.tasks import Task
 
 # The step kernel compares episode_steps (int32) with the limit
@@ -182,6 +182,15 @@ class VecEnv:
 
     def _step_body(self) -> None:
         """The captured per-step kernel sequence (see module docstring)."""
+        # 0. A non-finite action ends its environment with reason 6, whatever
+        # the task makes of it (a clamp would turn it into a finite command).
+        wp.launch(
+            kernel=_nonfinite_action_kernel,
+            dim=self.num_entities,
+            inputs=[self.actions, self.num_bodies, self.act_dim, self.sim.termination_checker.status],
+            device=self.device,
+        )
+
         # 1. Normalized action -> actuator commands.
         self.task.ingest_actions(self.actions)
 
@@ -269,6 +278,25 @@ class VecEnv:
                 "PyTorch is required for the zero-copy torch views "
                 "(pip install 'cosmic-warp[torch]')."
             ) from exc
+
+
+@wp.kernel
+def _nonfinite_action_kernel(
+    actions: wp.array2d(dtype=wp.float32),        # [N, act_dim]
+    num_bodies: int,
+    act_dim: int,
+    status: wp.array(dtype=TerminationStatus),   # [E]
+):
+    """Terminate, with the non-finite reason, every body of an environment
+    whose action has a NaN or Inf component. The integrator then carries the
+    state over unchanged, as for a non-finite command."""
+    e = wp.tid()
+    env = e // num_bodies
+    for i in range(act_dim):
+        if not wp.isfinite(actions[env, i]):
+            status[e].terminated = True
+            status[e].reason = REASON_NONFINITE
+            return
 
 
 @wp.kernel
