@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "gpu": "NVIDIA GeForce RTX 4070 Ti SUPER",
+    "cuda_driver": "13.0",
+    "warp": "1.18.0",
+    "torch": "2.15.0+cu132",
+    "python": "3.12.16",
+    "date": "2026-11-04",
+    "cosmic_warp": "0.1.0",
+    "num_steps": 2000,
+    "repeats": 5,
+    "diff_horizon": 32
+  },
+  "results": {
+    "symplectic/envs=16": 54894.7,
+    "symplectic/envs=1024": 20066.2,
+    "symplectic/envs=16384": 18822.2,
+    "rk4/envs=16": 50844.1,
+    "rk4/envs=1024": 14632.7,
+    "rk4/envs=16384": 13076.1,
+    "euler/envs=16": 113658.3,
+    "euler/envs=1024": 39642.5,
+    "euler/envs=16384": 35854.1,
+    "symplectic/thrusting/entities=16384": 15243.0,
+    "symplectic/bodies=4/entities=16384": 17514.7,
+    "rk4/thrusting/entities=16384": 11568.5,
+    "rk4/bodies=4/entities=16384": 12653.2,
+    "euler/thrusting/entities=16384": 24277.7,
+    "euler/bodies=4/entities=16384": 31929.2,
+    "diff_rollout/envs=1024": 101.39,
+    "diff_rollout_backward/envs=1024": 38.73,
+    "diff_rollout/envs=4096": 81.93,
+    "diff_rollout_backward/envs=4096": 36.3
+  }
+}

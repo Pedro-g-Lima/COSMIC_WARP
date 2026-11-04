@@ -1,0 +1,110 @@
+# Four bodies on phased circular orbits in each of three environments.
+#
+# The default config of 09_multi_body_orbit.py. Each environment holds four
+# spacecraft with different dry masses (70-100 kg):
+#
+#   - `initial_conditions.per_body` places each body on its own circular
+#     equatorial orbit (semi-major axes 7000-7060 km, phased 0.1 rad apart),
+#     identical in every environment. Applied once at load.
+#   - `reset` defines what later resets draw: a box of +/- 1 km and +/- 1 m/s
+#     around a 400 km circular state, with per-body mass bounds.
+#   - Two-body gravity only (J2 off), RK4 with 0.01 s steps.
+#
+# Run it with the bundled visualization:
+#   python examples/09_multi_body_orbit.py
+
+simulation:
+  num_envs: 3
+  num_bodies: 4
+  integrator: rk4
+  dt: 0.01
+  device: cuda
+
+physics:
+  gravity: true
+  j2_perturbation: false
+  gravity_gradient: false
+  magnetic_torque: false
+
+termination:
+  check_bounds: true
+  check_planet_impact: false
+  pos_limit: 1.0e+8
+  mom_limit: 1.0e+9
+  ang_mom_limit: 1.0e+8
+  mass_limit: 0.0
+  planet_radius: 0.0
+
+reset:
+  # Later resets: +/- 1 km and +/- 1 m/s around a circular 400 km LEO state
+  # (radius RE + 400 km along +X, circular speed along +Y)
+  pos_bounds: [[6.7771363e+6, -1000.0, -1000.0], [6.7791363e+6, 1000.0, 1000.0]]
+  vel_bounds: [[-1.0, 7667.56, -1.0], [1.0, 7669.56, 1.0]]
+  ang_mom_bounds: [[-0.1, -0.1, -0.1], [0.1, 0.1, 0.1]]
+  # Per-body mass bounds: sampled mass must stay above each body's mass_dry
+  per_body:
+    - body_id: 0
+      mass_bounds: [80.0, 120.0]
+    - body_id: 1
+      mass_bounds: [90.0, 130.0]
+    - body_id: 2
+      mass_bounds: [100.0, 140.0]
+    - body_id: 3
+      mass_bounds: [110.0, 150.0]
+
+body:
+  defaults:
+    vehicle:
+      mass_dry: 70.0
+      inertia: [[16.6667, 0.0, 0.0], [0.0, 16.6667, 0.0], [0.0, 0.0, 16.6667]]
+      area_drag: 1.0
+      cd: 2.2
+      magnetic_dipole: [0.0, 0.0, 0.0]
+    actuators:
+      thrusters:
+        max_thrust: 0.0
+        isp: 0.0
+      reaction_wheels:
+        max_torque: 0.0
+        wheel_inertia: 0.01
+        viscous_damping: 0.0
+  per_body:
+    - body_id: 0
+      vehicle:
+        mass_dry: 70.0
+    - body_id: 1
+      vehicle:
+        mass_dry: 80.0
+    - body_id: 2
+      vehicle:
+        mass_dry: 90.0
+    - body_id: 3
+      vehicle:
+        mass_dry: 100.0
+
+# Domain randomization (optional): resample vehicle parameters on the GPU at
+# every reset. Propellant is sampled on top of the dry mass (state mass =
+# mass_dry + propellant) and the inertia tensor is scaled from its nominal.
+# randomization:
+#   propellant: [10.0, 50.0]
+#   inertia_scale: [0.9, 1.1]
+#   per_body:
+#     - body_id: 3
+#       propellant: [10.0, 30.0]
+
+# Per-body initial conditions, broadcast to every environment. Each body sits
+# on its own circular orbit, phased 0.1 rad apart (orbit angles in radians).
+initial_conditions:
+  per_body:
+    - body_id: 0
+      orbit: {semi_major_axis: 7.00e+6, true_anomaly: 0.0}
+      mass: 100.0
+    - body_id: 1
+      orbit: {semi_major_axis: 7.02e+6, true_anomaly: 0.1}
+      mass: 110.0
+    - body_id: 2
+      orbit: {semi_major_axis: 7.04e+6, true_anomaly: 0.2}
+      mass: 120.0
+    - body_id: 3
+      orbit: {semi_major_axis: 7.06e+6, true_anomaly: 0.3}
+      mass: 130.0

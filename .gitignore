@@ -1,0 +1,31 @@
+__pycache__/
+
+.vscode
+.venv/
+examples/*.png
+/*.png
+
+*.mp4
+*.csv
+*.zip
+*.rar
+*.gif
+*.npy
+*.pth
+*.pt
+*.pkl
+
+# Build artifacts
+cosmic_warp.egg-info/
+dist/
+uv.lock
+
+# Docs build
+site/
+.cache/
+
+build/
+
+# RL trainer output (rl_games / skrl runs and checkpoints)
+runs/
+nn/

@@ -1,0 +1,23 @@
+# Minimal example: one spacecraft on a deterministic 400 km circular LEO orbit.
+#
+# The smallest useful config: everything not listed here keeps its default
+# (RK4 integrator, gravity + J2 on, 1 kg vehicle). The exact orbit is
+# pinned with `initial_conditions`, so every run starts identically.
+#
+# Load with:
+#   from cosmic_warp.core.config import create_simulator_from_yaml
+#   sim = create_simulator_from_yaml("examples/minimal_orbit.yaml")
+#   sim.simulate(num_steps=5000)
+#
+# Full schema reference: the configuration guide in the docs.
+
+simulation:
+  num_envs: 1
+  dt: 1.0
+  device: cuda
+
+initial_conditions:
+  per_body:
+    - body_id: 0
+      orbit: {altitude: 400.0e+3, inclination: 0.9006}   # 51.6 deg, radians
+      mass: 1.0

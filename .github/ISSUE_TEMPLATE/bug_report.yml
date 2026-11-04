@@ -1,0 +1,29 @@
+name: Bug report
+description: Something is wrong or does not match the docs
+labels: [needs-triage]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A short script or YAML config that shows the problem.
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: |
+        Output of:
+        python -c "import cosmic_warp, warp, platform; print(cosmic_warp.__version__, warp.__version__, platform.python_version())"
+        plus the device (GPU model and driver, or CPU).
+    validations:
+      required: true

@@ -1,0 +1,69 @@
+# RL training setup: attitude control with reaction wheels, 2048 parallel envs.
+#
+# Use case: train a policy to detumble / repoint a spacecraft. Episodes start
+# on a fixed circular orbit (at a random phase along it) with a randomized
+# attitude error and tumble rate; environments that exceed the
+# angular-momentum limit terminate and are reset on-device.
+#
+#   - `reset.orbit` pins the orbit's size and plane (scalar bounds) and only
+#     draws the phase along it, while attitude and angular momentum stay
+#     randomized — the task is attitude, not orbit.
+#   - `att_nominal` + `att_max_angle` bound the initial attitude error to a
+#     30 deg cone around identity (Haar-uniform inside the cone; set 3.1416
+#     for fully random attitudes, 0.0 for a fixed attitude).
+#   - `ang_mom_bounds` sets the initial tumble; `termination.ang_mom_limit`
+#     ends episodes that spin up beyond control authority.
+#
+# Typical training loop:
+#   sim = create_simulator_from_yaml("examples/rl_attitude_training.yaml")
+#   sim.reset()
+#   for _ in range(horizon):
+#       sim.set_rw_torque_commands_per_entity(actions)     # policy output
+#       sim.step()
+#       obs = sim.get_quaternions(), sim.get_angular_velocities()
+#       sim.reset_terminated()                          # on-device auto-reset
+#       truncated = sim.get_episode_steps().numpy() >= max_episode_steps
+#
+# (Or `sim.simulate(..., auto_reset_terminated=True)` to run the whole loop
+# inside one CUDA graph.)
+
+simulation:
+  num_envs: 2048
+  integrator: symplectic
+  dt: 0.1
+  device: cuda
+
+physics:
+  gravity: true
+  j2_perturbation: true
+  gravity_gradient: true         # attitude-relevant perturbation
+
+termination:
+  check_bounds: true
+  pos_limit: 1.0e+8
+  mom_limit: 1.0e+8
+  ang_mom_limit: 5.0             # episode ends if the tumble exceeds this
+  mass_limit: 0.0
+
+reset:
+  seed: 42
+  orbit:
+    altitude: 400.0e+3           # scalars: the orbit itself is not randomized
+    inclination: 0.9006
+    true_anomaly: [0.0, 6.283185307179586]   # ...but the phase along it is
+  att_nominal: [0.0, 0.0, 0.0, 1.0]
+  att_max_angle: 0.5236          # 30 deg initial attitude error cone [rad]
+  ang_mom_bounds: [[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]]   # initial tumble
+  mass_bounds: [12.0, 12.0]
+
+body:
+  defaults:
+    vehicle:
+      mass_dry: 12.0             # no propellant: RW-only control
+      inertia: [[0.4, 0.0, 0.0], [0.0, 0.4, 0.0], [0.0, 0.0, 0.3]]
+    actuators:
+      reaction_wheels:
+        max_torque: 0.02         # [N*m] per wheel
+        max_momentum: 0.5        # [kg*m^2/s] wheel saturation
+        wheel_inertia: 0.005
+        viscous_damping: 1.0e-5

@@ -1,0 +1,95 @@
+# Rendezvous scenario: passive target + thruster-equipped chaser (2 bodies).
+#
+# The most complete example: per-body vehicles/actuators, exact initial
+# geometry, per-body reset distributions, and per-body randomization.
+#
+#   - `initial_conditions` pins the *first* episode exactly: both craft on
+#     the same 400 km orbit, the chaser 0.2 mrad behind the target
+#     (~1.4 km along-track). Applied once at load, after an initial reset.
+#   - `reset` defines what later resets (manual or auto) draw: each body
+#     re-randomizes onto its own orbit band. Note that reset draws are
+#     independent per body — the relative chaser-target geometry is only
+#     exact in the pinned initial conditions.
+#   - `body.per_body` gives the two craft different masses, inertias and
+#     actuators (the target flies ballistic: zero thrust, locked wheels).
+#   - `randomization.per_body` resamples only the chaser's propellant load.
+#
+# Run the bundled visualization on it:
+#   python examples/09_multi_body_orbit.py \
+#       --config examples/rendezvous_chaser_target.yaml
+
+simulation:
+  num_envs: 1024
+  num_bodies: 2                  # body 0 = target, body 1 = chaser
+  integrator: symplectic
+  dt: 0.5
+  device: cuda
+
+physics:
+  gravity: true
+  j2_perturbation: true
+
+termination:
+  check_bounds: true
+  pos_limit: 1.0e+8
+  mom_limit: 1.0e+9
+  ang_mom_limit: 1.0e+3
+  check_planet_impact: true
+  planet_radius: 6.3781363e+6
+
+# Sampling distributions for resets after the first episode
+reset:
+  seed: 11
+  ang_mom_bounds: [[-0.1, -0.1, -0.1], [0.1, 0.1, 0.1]]
+  per_body:
+    - body_id: 0                 # target: tight orbit band, heavy
+      orbit:
+        altitude: [395.0e+3, 405.0e+3]
+        inclination: 0.9006
+        true_anomaly: [0.0, 6.283185307179586]
+      mass_bounds: [500.0, 500.0]
+    - body_id: 1                 # chaser: wider band, mass set by propellant
+      orbit:
+        altitude: [390.0e+3, 410.0e+3]
+        eccentricity: [0.0, 0.002]
+        inclination: 0.9006
+        true_anomaly: [0.0, 6.283185307179586]
+      mass_bounds: [120.0, 120.0]
+
+body:
+  defaults:
+    vehicle:
+      area_drag: 2.0
+      cd: 2.2
+  per_body:
+    - body_id: 0                 # target: passive, no actuation
+      vehicle:
+        mass_dry: 500.0
+        inertia: [[200.0, 0.0, 0.0], [0.0, 200.0, 0.0], [0.0, 0.0, 150.0]]
+      actuators:
+        thrusters: {max_thrust: 0.0, isp: 0.0}
+        reaction_wheels: {max_torque: 0.0, wheel_inertia: 0.01}
+    - body_id: 1                 # chaser: 1 N thrusters + reaction wheels
+      vehicle:
+        mass_dry: 100.0
+        inertia: [[15.0, 0.0, 0.0], [0.0, 15.0, 0.0], [0.0, 0.0, 12.0]]
+      actuators:
+        thrusters: {max_thrust: 1.0, isp: 220.0}
+        reaction_wheels: {max_torque: 0.05, max_momentum: 2.0, wheel_inertia: 0.01}
+
+# Only the chaser's propellant load is randomized on reset
+randomization:
+  seed: 5
+  per_body:
+    - body_id: 1
+      propellant: [10.0, 30.0]
+
+# Exact first-episode geometry, broadcast to every environment
+initial_conditions:
+  per_body:
+    - body_id: 0
+      orbit: {altitude: 400.0e+3, inclination: 0.9006}
+      mass: 500.0
+    - body_id: 1                 # 0.2 mrad behind: ~1.4 km along-track
+      orbit: {altitude: 400.0e+3, inclination: 0.9006, true_anomaly: -2.0e-4}
+      mass: 120.0

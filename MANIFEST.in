@@ -1,0 +1,10 @@
+# The sdist is the whole source (conda-forge builds and tests from it): the
+# test suite with its helpers and golden fixtures, and what the suite reads —
+# the docs it checks, the examples it runs, the scripts that draw the figures.
+graft tests
+graft docs
+graft examples
+graft scripts
+graft benchmarks
+include mkdocs.yml CHANGELOG.md CITATION.cff CONTRIBUTING.md
+global-exclude __pycache__ *.py[cod]

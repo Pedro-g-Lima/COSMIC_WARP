@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=77"]   # PEP 639 license expression
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosmic-warp"
+dynamic = ["version"]   # cosmic_warp.__version__
+description = "GPU-accelerated parallel spacecraft dynamics simulator built on NVIDIA Warp"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Pedro Lima" }, { name = "Aman Arora" }]
+requires-python = ">=3.12"   # 3.10 reached end of life 2026-10; NumPy 2.5 needs 3.12
+keywords = ["spacecraft", "simulation", "astrodynamics", "attitude dynamics", "gpu",
+            "nvidia warp", "differentiable simulation", "reinforcement learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: GPU :: NVIDIA CUDA",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Ranges whose both ends CI tests (the dependency-range job): Python 3.12 with
+# the lower bounds, Python 3.14 with the newest releases. Warp is capped at the
+# newest release tested; raise the cap after testing the next one.
+dependencies = [
+    "warp-lang>=1.15,<1.19",
+    "numpy>=2.0",
+    "PyYAML>=6.0.1",
+]
+
+# Each extra's comment is its row in the docs' extras table
+# (scripts/gen_tables.py); an extra without one fails the docs build.
+[project.optional-dependencies]
+# Plotting in the example scripts.
+examples = ["matplotlib"]
+# Zero-copy torch views (`VecEnv.*_torch()`) and differentiable RL (`DiffVecEnv`).
+torch = ["torch"]
+# The rsl_rl PPO adapter (pulls in torch). Tested with 5.5.
+rsl-rl = ["rsl-rl-lib>=5.0,<6.0"]
+# The skrl adapter (pulls in torch). Tested with 2.1.
+skrl = ["skrl[torch]>=2.0,<3.0"]   # skrl lists torch only under its own extra
+# The rl_games PPO adapter (pulls in torch). Tested with 1.6.
+rl-games = ["rl-games>=1.6.5,<2.0"]   # 1.6.0-1.6.4 cap Python below 3.11
+
+# Development tools, installed with `pip install --group <name>` (pip >= 25.1).
+# Groups are never published, so their exact pins cannot reach users the way
+# an extra's would.
+[dependency-groups]
+# The test suite. Warp is pinned exactly: the golden trajectories are
+# bit-exact, and a codegen change in another release would fail them with no
+# way to tell "Warp changed" from "we broke it". The runtime requirement stays
+# a range, covered by CI's dependency-range job with the goldens deselected.
+# matplotlib: tests/test_examples.py runs the plotting examples.
+dev = ["pytest==9.2.0", "warp-lang==1.18.0", "matplotlib==3.10.9"]
+# Building the documentation, pinned exactly: `mkdocs build --strict` is a CI
+# gate, and a gate whose toolchain re-resolves on every run is not one. MkDocs
+# 2.0 (in pre-release) drops plugin support this site depends on (generated
+# pages, literate nav, mkdocstrings), so `mkdocs` itself is pinned too.
+docs = [
+    "mkdocs==1.6.1",
+    "mkdocs-material==9.7.7",
+    "mkdocstrings==1.0.6",
+    "mkdocstrings-python==2.0.9",
+    "mkdocs-autorefs==1.4.4",
+    "mkdocs-gen-files==0.6.1",
+    "mkdocs-literate-nav==0.6.3",
+    "pymdown-extensions==11.0.2",  # 12.x breaks mkdocstrings-python 2.0
+    "ruff==0.17.3",                # formats the separated signatures
+    # The diagrams (scripts/diagrams.py) and the validation figures, which the
+    # build draws from the tests' own computations (scripts/figures.py), so it
+    # needs what the tests need: pytest, the pinned Warp and matplotlib.
+    {include-group = "dev"},
+]
+
+[project.urls]
+Homepage = "https://github.com/Pedro-g-Lima/COSMIC_WARP"
+Documentation = "https://pedro-g-lima.github.io/COSMIC_WARP/"
+Issues = "https://github.com/Pedro-g-Lima/COSMIC_WARP/issues"
+Changelog = "https://github.com/Pedro-g-Lima/COSMIC_WARP/blob/main/CHANGELOG.md"
+
+[tool.setuptools.dynamic]
+version = { attr = "cosmic_warp.__version__" }   # read statically: no import
+
+[tool.setuptools.packages.find]
+include = ["cosmic_warp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: long-running end-to-end training tests (deselect with -m 'not slow')",
+    "golden: bit-exact trajectories, valid only with the dev group's pinned Warp",
+]
+filterwarnings = [
+    # rl_games triggers this deprecated torch API on import (third-party).
+    "ignore:`torch.jit.script_method` is deprecated:DeprecationWarning",
+]

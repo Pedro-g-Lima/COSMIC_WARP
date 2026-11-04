@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "COSMIC WARP: GPU-Accelerated Spacecraft Simulator"
+type: software
+authors:
+  - family-names: "Lima"
+    given-names: "Pedro"
+    affiliation: "University of Luxembourg, SnT, SpaceR"
+  - family-names: "Arora"
+    given-names: "Aman"
+    affiliation: "University of Luxembourg, SnT, SpaceR"
+version: 0.1.0
+license: Apache-2.0
+repository-code: "https://github.com/Pedro-g-Lima/COSMIC_WARP"
+url: "https://pedro-g-lima.github.io/COSMIC_WARP/"
+keywords:
+  - spacecraft simulation
+  - GPU
+  - NVIDIA Warp
+  - differentiable simulation
+  - reinforcement learning

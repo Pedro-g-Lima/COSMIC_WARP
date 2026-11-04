@@ -1,0 +1,49 @@
+name: release
+
+# Pushing a version tag (v0.1.0) builds the sdist and wheel, checks them and
+# publishes them to PyPI by trusted publishing: no token is stored. Needs a
+# trusted publisher registered on PyPI for this repository, this workflow
+# (release.yml) and the `pypi` environment.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip build twine
+      - run: python -m build
+      - run: python -m twine check --strict dist/*
+      # The tag names the version that is published: refuse a mismatch
+      - name: Tag matches the package version
+        run: |
+          version=$(grep -oP '^__version__ = "\K[^"]+' cosmic_warp/__init__.py)
+          test "$GITHUB_REF_NAME" = "v$version" || {
+            echo "tag $GITHUB_REF_NAME does not match __version__ $version"; exit 1; }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/cosmic-warp/
+    permissions:
+      id-token: write   # trusted publishing
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

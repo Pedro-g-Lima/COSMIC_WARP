@@ -1,0 +1,45 @@
+/* COSMIC WARP docs polish */
+
+/* The diagrams' palette (scripts/diagrams.py), so the site and its drawings
+   agree: blue for the header and links, orange on hover, and one colour per
+   Home card. mkdocs.yml sets primary and accent to `custom` for these. */
+:root {
+  --cw-blue: #2a78d6;
+  --cw-orange: #eb6834;
+  --cw-green: #1baf7a;
+  --cw-amber: #c98500;
+  --md-primary-fg-color: var(--cw-blue);
+  --md-primary-fg-color--light: #5b9ae8;
+  --md-primary-fg-color--dark: #1f5fae;
+  --md-accent-fg-color: var(--cw-orange);
+}
+
+[data-md-color-scheme="slate"] {
+  --cw-blue: #3987e5;
+  --cw-orange: #d95926;
+  --cw-green: #199e70;
+  --cw-amber: #eda100;
+}
+
+.md-typeset .grid.cards > ul > li { border-top: 3px solid var(--cw-card); }
+.md-typeset .grid.cards > ul > li .twemoji { color: var(--cw-card); }
+.md-typeset .grid.cards > ul > li:nth-child(4n + 1) { --cw-card: var(--cw-blue); }
+.md-typeset .grid.cards > ul > li:nth-child(4n + 2) { --cw-card: var(--cw-orange); }
+.md-typeset .grid.cards > ul > li:nth-child(4n + 3) { --cw-card: var(--cw-green); }
+.md-typeset .grid.cards > ul > li:nth-child(4n + 4) { --cw-card: var(--cw-amber); }
+
+/* Material clears the border on hover, which took the stripe with it; instead
+   the whole outline takes the card's colour. */
+.md-typeset .grid.cards > ul > li:hover,
+.md-typeset .grid.cards > ul > li:focus-within { border-color: var(--cw-card); }
+
+/* Slightly larger landing-page hero text */
+.cw-hero h1 {
+  font-size: 2.2rem;
+  margin-bottom: 0.4rem;
+}
+
+/* Keep example gallery card images tidy */
+.grid.cards img {
+  border-radius: 0.2rem;
+}

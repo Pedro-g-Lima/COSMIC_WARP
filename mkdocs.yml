@@ -1,0 +1,157 @@
+site_name: COSMIC WARP
+site_description: GPU-accelerated parallel spacecraft dynamics simulator built on NVIDIA Warp
+site_url: https://pedro-g-lima.github.io/COSMIC_WARP/
+repo_url: https://github.com/Pedro-g-Lima/COSMIC_WARP
+repo_name: Pedro-g-Lima/COSMIC_WARP
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/orbit
+  favicon: assets/favicon.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom   # docs/stylesheets/extra.css
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom   # docs/stylesheets/extra.css
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    # A section heading links to its index page. Not together with the
+    # section-index plugin: with both, the API section's nav came out empty.
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - scripts/gen_ref_pages.py
+        - scripts/gen_example_pages.py
+        - scripts/gen_changelog_page.py
+        - scripts/gen_figures.py
+        - scripts/gen_tables.py   # last: fills markers in every page
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [.]
+          options:
+            docstring_style: google
+            docstring_section_style: table
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            show_root_heading: true
+            show_source: true
+            members_order: source
+            filters: ["!^_"]
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - footnotes
+  - tables
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      check_paths: true
+  - pymdownx.superfences
+  # Figure captions below the image, as in a paper; unnumbered.
+  - pymdownx.blocks.caption
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+# KaTeX pinned to an exact release: a floating `@0.16` re-resolves on every
+# page load, so the rendered math could change with no change here.
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0.16.47/dist/katex.min.js
+  - https://unpkg.com/katex@0.16.47/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0.16.47/dist/katex.min.css
+  - stylesheets/extra.css
+
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Troubleshooting: troubleshooting.md
+  - Guides:
+      - guides/index.md
+      - Configure a scenario (YAML): guides/configuration.md
+      - Vehicles: guides/vehicle.md
+      - Actuators: guides/actuators.md
+      - Initial conditions and resets: guides/reset.md
+      - Domain randomization: guides/randomization.md
+      - Physics models: guides/physics.md
+      - Integrators: guides/integrators.md
+      - Run, record, terminate: guides/running.md
+      - Scale up: guides/scaling.md
+      - RL environments: guides/rl.md
+      - Differentiable rollouts: guides/differentiable.md
+      - Differentiable RL: guides/differentiable-rl.md
+      - Extending: guides/extending.md
+  - Examples: examples/
+  - Theory:
+      - theory/index.md
+      - Frames, state and units: theory/conventions.md
+      - Rigid-body dynamics: theory/dynamics.md
+      - Gravity & J2: theory/gravity.md
+      - Environment models: theory/environment.md
+      - Actuator models: theory/actuators.md
+      - Numerical integration: theory/integrators.md
+      - Initial-condition sampling: theory/sampling.md
+      - GPU execution and the RL step: theory/execution.md
+      - Differentiable dynamics: theory/differentiable.md
+  - Validation:
+      - validation/index.md
+      - Physics: validation/physics.md
+      - Numerics: validation/numerics.md
+      - Execution: validation/execution.md
+      - RL and autodiff: validation/learning.md
+      # Measured, not test-checked
+      - Benchmarks: benchmarks.md
+  - Reference:
+      - reference/index.md
+      - API: reference/api/
+      - API stability: reference/stability.md
+      - Changelog: reference/changelog.md
+      - Bibliography: references.md
+      - Citation & license: citation.md
+  - Roadmap: roadmap.md
+
+# Broken anchors are only INFO by default; under --strict this makes them fail.
+validation:
+  anchors: warn

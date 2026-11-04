@@ -1,0 +1,59 @@
+# Monte Carlo dispersion study: 4096 spacecraft on randomized LEO orbits.
+#
+# Use case: propagate a large population drawn from an orbit family and
+# study the dispersion statistics (e.g. decay, impact rates, along-track
+# spread). Every `sim.reset()` draws a fresh population:
+#
+#   - `reset.orbit` samples classical orbital elements per entity, entirely
+#     on the GPU, so position and momentum are always dynamically consistent.
+#     `mean_anomaly` (rather than `true_anomaly`) makes the along-orbit
+#     placement uniform in *time* — a spacecraft observed at a random epoch.
+#   - `randomization` resamples vehicle parameters (propellant load, inertia)
+#     at every reset on top of the dynamic state.
+#
+# Typical driver:
+#   sim = create_simulator_from_yaml("examples/monte_carlo_dispersion.yaml")
+#   results = sim.simulate_monte_carlo(num_steps=50000)
+#
+# Theory (element sampling densities, true vs mean anomaly): the orbit
+# sampling page of the theory section in the docs.
+
+simulation:
+  num_envs: 4096
+  integrator: symplectic
+  dt: 1.0
+  device: cuda
+
+physics:
+  gravity: true
+  j2_perturbation: true
+  drag: true                     # uses vehicle.area_drag and vehicle.cd
+
+termination:
+  check_bounds: false
+  check_planet_impact: true
+  planet_radius: 6.3781363e+6    # Earth equatorial radius [m]
+
+reset:
+  seed: 2026
+  orbit:
+    altitude: [380.0e+3, 420.0e+3]   # [min, max] pairs; scalar = fixed value
+    eccentricity: [0.0, 0.01]
+    inclination: 0.9006              # fixed 51.6 deg plane
+    raan: [0.0, 6.283185307179586]
+    mean_anomaly: [0.0, 6.283185307179586]   # uniform in time along the orbit
+  mass_bounds: [60.0, 60.0]      # overwritten by propellant randomization below
+
+body:
+  defaults:
+    vehicle:
+      mass_dry: 50.0
+      inertia: [[10.0, 0.0, 0.0], [0.0, 10.0, 0.0], [0.0, 0.0, 10.0]]
+      area_drag: 1.5
+      cd: 2.2
+
+# Resampled on the GPU at every reset: state mass = mass_dry + propellant
+randomization:
+  seed: 7
+  propellant: [5.0, 20.0]
+  inertia_scale: [0.95, 1.05]
