@@ -30,7 +30,7 @@ def scalar(name: str, value, minimum: float = None, positive: bool = False,
 
 
 def polar_angle(name: str, value) -> float:
-    """Return value as a finite angle in [0, pi] [rad]: an inclination or a
+    """Return value as a finite angle in radians, in [0, pi]: an inclination or a
     cone half-angle, both defined only on that range."""
     x = scalar(name, value)
     if not 0.0 <= x <= math.pi:
