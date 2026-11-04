@@ -25,14 +25,11 @@ Options: `--num-envs`, `--num-steps`, `--dt`, `--device`, `--no-show`.
 
 ![Mass](../assets/examples/planar_thrusters_mass.png)
 
-**What to look for:** an off-centre thruster gives both a force and a torque.
-The body spins up about -Z at a constant rate of torque/inertia
-(0.27 / 0.0591 = 4.57 rad/s^2, reaching about -22.8 rad/s after 5 s), and
-because the body-fixed thrust rotates with it, the trajectory bends and then
-settles into a wobbling drift as the rotating thrust averages out, instead of
-accelerating in a straight line. The script uses `isp = 0`
-(an ideal thruster), so the mass stays at 5.25 kg; with a nonzero `isp` the
-mass decreases while firing.
+**What to look for:** an off-centre thruster gives a force and a torque.
+The body spins up about -Z at 0.27 / 0.0591 = 4.57 rad/s^2 (about
+-22.8 rad/s after 5 s); the body-fixed thrust rotates with it, so the
+trajectory bends into a wobbling drift instead of a straight line. With
+`isp = 0` the mass stays at 5.25 kg.
 """
 import argparse
 import os

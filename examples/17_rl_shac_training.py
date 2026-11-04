@@ -25,9 +25,8 @@ pip install "cosmic-warp[torch]"
 python examples/17_rl_shac_training.py
 ```
 
-Options: `--num-envs`, `--updates`, `--horizon`, `--w-att`, `--device`. By
-default it trains the pure-detumble task (`--w-att 0`); a nonzero `--w-att`
-adds the harder attitude-regulation term (full repointing). See the
+Options: `--num-envs`, `--updates`, `--horizon`, `--w-att`, `--device`. Default
+task: detumble (`--w-att 0`); a nonzero `--w-att` adds repointing. See the
 [differentiable RL guide](../guides/differentiable-rl.md) for the
 environment and the gradient path.
 

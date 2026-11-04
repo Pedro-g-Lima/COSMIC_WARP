@@ -24,15 +24,11 @@ rollout API.
 
 ![Gradient optimization](../assets/examples/gradient_optimization.png)
 
-**What to look for:** the miss distance contracts geometrically (a straight
-line on the log plot), from 50 km to below 1 m in about 30 iterations and to
-below 1 mm by the end of the default 60; each iteration is one forward and
-one adjoint rollout. The script reports convergence against `--tol-m` (1 m
-by default). Because the dynamics are two-body, the delta-v it finds can be
-checked against the analytic cross-track answer
-$\Delta v = \delta \, n / \sin(nt)$ (offset $\delta$, mean motion $n$),
-which it also prints: both give 61.883 m/s, a check that the gradients
-through the orbital dynamics are correct.
+**What to look for:** the miss distance contracts geometrically, from
+50 km to below 1 m in about 30 iterations and below 1 mm by the default 60
+(each a forward and an adjoint rollout). The delta-v found matches the
+analytic two-body answer $\Delta v = \delta \, n / \sin(nt)$ (offset
+$\delta$, mean motion $n$), which the script also prints: 61.883 m/s.
 """
 
 import argparse

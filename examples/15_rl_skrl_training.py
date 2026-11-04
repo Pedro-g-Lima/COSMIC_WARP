@@ -18,9 +18,8 @@ pip install "cosmic-warp[skrl]"          # skrl + torch
 python examples/15_rl_skrl_training.py
 ```
 
-Options: `--num-envs`, `--iterations`, `--w-att`, `--device`. By default it
-trains the pure-detumble task (`--w-att 0`); a nonzero `--w-att` adds the
-harder attitude-regulation term (full repointing). See the
+Options: `--num-envs`, `--iterations`, `--w-att`, `--device`. Default task: detumble
+(`--w-att 0`); a nonzero `--w-att` adds repointing. See the
 [reinforcement learning guide](../guides/rl.md) for the adapters.
 
 **What to look for:** the mean tumble rate drops by about 95 % after

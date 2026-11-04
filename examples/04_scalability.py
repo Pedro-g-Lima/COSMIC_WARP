@@ -1,17 +1,11 @@
 """Scalability
 
-Times `sim.step()` for increasing numbers of environments (1 to 1 000 000 by
-default, in powers of ten) and for each integrator, and prints the total
-time, time per step and steps per second for each count. Multiply steps per
-second by the environment count for the throughput in env-steps per second.
-
-- Each count gets 10 warm-up steps, then `--steps` timed steps (10 000 by
-  default) followed by a device synchronization.
-- Each `sim.step()` is a separate Python call, so at small counts the time
-  per step is set by launch overhead rather than by the number of
-  environments.
-- A count that runs out of device memory is reported and skipped; any other
-  error is raised.
+Times `sim.step()` for 1 to 1 000 000 environments (powers of ten) and each
+integrator, and prints the time per step and steps per second (times the
+environment count: env-steps per second). Each count gets 10 warm-up steps,
+then `--steps` timed steps and a synchronization. Each `sim.step()` is a
+Python call, so small counts measure launch overhead. A count that runs out
+of device memory is skipped.
 
 ```bash
 python examples/04_scalability.py
@@ -20,11 +14,9 @@ python examples/04_scalability.py --env-counts 1000 100000 --steps 1000 --integr
 
 Options: `--env-counts`, `--steps`, `--dt`, `--device`, `--integrators`.
 
-**What to look for:** the time per step grows far more slowly than the
-environment count up to about 10 000 environments, then roughly in proportion
-to it once the GPU is saturated, so the throughput keeps rising up to the
-largest counts. Runtimes depend on the hardware; see the
-[Benchmarks](../benchmarks.md) page for measured numbers.
+**What to look for:** the time per step barely grows up to about 10 000
+environments, then grows with the count once the GPU is full. Measured
+numbers: [Benchmarks](../benchmarks.md).
 """
 
 import argparse

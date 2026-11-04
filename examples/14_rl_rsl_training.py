@@ -19,10 +19,9 @@ pip install "cosmic-warp[rsl-rl]"        # rsl-rl-lib + torch
 python examples/14_rl_rsl_training.py
 ```
 
-Options: `--num-envs`, `--iterations`, `--w-att`, `--device`. By default it
-trains the pure-detumble task (`--w-att 0`), which takes a few seconds on a
-desktop GPU; a nonzero `--w-att` adds the harder attitude-regulation term
-(full repointing). See the [reinforcement learning guide](../guides/rl.md)
+Options: `--num-envs`, `--iterations`, `--w-att`, `--device`. Default task: detumble
+(`--w-att 0`, a few seconds on a desktop GPU); a nonzero `--w-att` adds
+repointing. See the [reinforcement learning guide](../guides/rl.md)
 for the adapters.
 
 **What to look for:** the mean tumble rate drops by about 70-90 % from before
