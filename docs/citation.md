@@ -12,6 +12,7 @@ repository" uses the same
   author  = {Lima, Pedro and Arora, Aman},
   year    = {2026},
   version = {0.1.0},
+  doi     = {10.5281/zenodo.23950779},
   url     = {https://github.com/Pedro-g-Lima/COSMIC_WARP}
 }
 ```

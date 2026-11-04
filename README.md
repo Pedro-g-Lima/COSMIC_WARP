@@ -8,6 +8,7 @@
 <a href="https://pypi.org/project/cosmic-warp/"><img src="https://img.shields.io/pypi/v/cosmic-warp" alt="PyPI" /></a>
 <img src="https://img.shields.io/badge/python-3.12%20%7C%203.13%20%7C%203.14-blue" alt="Python 3.12-3.14" />
 <a href="https://github.com/Pedro-g-Lima/COSMIC_WARP/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-green" alt="License: Apache-2.0" /></a>
+<a href="https://doi.org/10.5281/zenodo.23950779"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.23950779.svg" alt="DOI" /></a>
 </p>
 
 GPU-parallel spacecraft dynamics on [NVIDIA Warp](https://github.com/NVIDIA/warp).
@@ -146,6 +147,7 @@ GitHub's "Cite this repository" uses
   author  = {Lima, Pedro and Arora, Aman},
   year    = {2026},
   version = {0.1.0},
+  doi     = {10.5281/zenodo.23950779},
   url     = {https://github.com/Pedro-g-Lima/COSMIC_WARP}
 }
 ```

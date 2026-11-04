@@ -8,6 +8,9 @@ uses [semantic versioning](https://semver.org/).
 
 ### Documentation
 
+- Citation: Zenodo DOI [10.5281/zenodo.23950779](https://doi.org/10.5281/zenodo.23950779)
+  (all versions; 0.1.0 is 10.5281/zenodo.23950780) in `CITATION.cff`, the
+  README badge and the BibTeX entries.
 - Shortened the README and the documentation site (prose by about a third):
   tables and lists in place of paragraphs, each caveat stated once next to
   the claim it qualifies, status kept to this changelog and the roadmap.
