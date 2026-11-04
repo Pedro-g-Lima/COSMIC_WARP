@@ -69,9 +69,8 @@ bool `terminated` and `truncated`, one row per environment.
 - **`terminated`**: the simulator's [termination](running.md#termination)
   ended the episode. **`truncated`**: it reached `max_episode_steps`. Never
   both.
-- **A NaN or Inf command** ends its environment with reason 6, state
-  unchanged. A task that clamps actions must pass a non-finite action on to
-  the commands (`wp.clamp` makes it finite), as `AttitudeTask` does.
+- **A NaN or Inf action** ends its environment with reason 6, state
+  unchanged, whatever the task does with it (a clamp would make it finite).
 
 For value targets, bootstrap from `obs` on a continuing transition, from
 `terminal_obs` on a truncated one, and not at all on a terminated one. The

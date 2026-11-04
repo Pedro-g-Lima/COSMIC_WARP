@@ -6,6 +6,13 @@ uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- `VecEnv.step` ends an environment whose action has a NaN or Inf component
+  (termination reason 6, state unchanged) whatever the task does with the
+  action. Before, a task that clamped or ignored actions turned a non-finite
+  action into a finite command and the episode went on.
+
 ### Documentation
 
 - Citation: Zenodo DOI [10.5281/zenodo.23950779](https://doi.org/10.5281/zenodo.23950779)

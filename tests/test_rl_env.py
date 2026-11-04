@@ -331,6 +331,37 @@ def test_buffers_are_read_only(device, name):
         setattr(env, name, getattr(env, name))
 
 
+class _IgnoresActions(DetumbleTask):
+    """Ingests zeros whatever the action: a NaN never reaches the commands."""
+
+    def bind(self, env):
+        super().bind(env)
+        self._zeros = wp.zeros((env.num_envs, self.act_dim), dtype=wp.float32, device=env.device)
+
+    def ingest_actions(self, action):
+        super().ingest_actions(self._zeros)
+
+
+def test_nan_action_terminates_even_if_the_task_drops_it(device):
+    """VecEnv checks the actions itself: an environment whose action is not
+    finite ends with reason 6, state unchanged, whatever the task does with
+    the action."""
+    env = VecEnv(_make_sim(device, num_envs=4), _IgnoresActions(), max_episode_steps=100)
+    obs = env.reset().numpy().copy()
+    act = np.zeros((env.num_envs, env.act_dim), dtype=np.float32)
+    act[1, 0] = np.inf
+    act[3, 2] = np.nan
+    for _ in range(2):  # the second step replays the captured graph
+        next_obs, _, terminated, _ = env.step(wp.array(act, dtype=wp.float32, device=device))
+        np.testing.assert_array_equal(terminated.numpy(), [False, True, False, True])
+        np.testing.assert_array_equal(env.terminal_obs.numpy()[[1, 3]], obs[[1, 3]])
+        obs = next_obs.numpy().copy()  # 1 and 3 restart from their reset state
+    assert env.sim.termination_checker.get_termination_reasons() == {}  # auto-reset cleared them
+    act[:] = 0.0
+    env.step(wp.array(act, dtype=wp.float32, device=device))
+    assert not env.step(wp.array(act, dtype=wp.float32, device=device))[2].numpy().any()
+
+
 def test_nan_action_terminates_its_environment(device):
     """The test task passes a NaN action on to the commands, so its
     environment terminates with reason 6 before the physics step (the

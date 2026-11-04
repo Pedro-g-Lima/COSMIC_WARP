@@ -43,6 +43,7 @@ of examples 13–16.
 | Reward from the returned observation | −(w_att θ² + w_rate \|ω\|² + w_ctrl \|a\|²), θ the rotation angle | 1e-3 relative, 1e-4 absolute |
 | With w_att = 0, five steps of random actions | `DetumbleTask`'s observations and rewards | 1e-6 relative |
 | A NaN or an Inf action | passed on to the commands: its environment terminates (a clamp would make it a finite torque) | exact |
+| A NaN action, to a task that ignores its actions | its environment still terminates with reason 6, before the physics step | exact |
 
 ## Trainer adapters
 
