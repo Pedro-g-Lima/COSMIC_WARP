@@ -7,19 +7,25 @@ load a scenario from YAML.
 
 <!-- generated: requirements -->
 
-An NVIDIA GPU with CUDA is the intended target. Everything also runs on the
-CPU, more slowly.
+An NVIDIA GPU with CUDA is the target; everything also runs on the CPU,
+more slowly.
+
+**Python older than 3.12?** Ubuntu 22.04, for one, ships 3.10. Leave the
+system Python alone and create the environment with a newer one:
+
+```bash
+conda create -n cosmic-warp python=3.12 && conda activate cosmic-warp
+# or with uv, then `uv pip install` wherever this page says `pip install`
+uv venv --python 3.12 && source .venv/bin/activate
+```
 
 ## Install
-
-From PyPI:
 
 ```bash
 pip install cosmic-warp
 ```
 
-The examples and the test suite live in the repository. To run them, install
-from a clone instead:
+To run the examples and the tests, install from a clone instead:
 
 ```bash
 git clone https://github.com/Pedro-g-Lima/COSMIC_WARP.git
@@ -29,11 +35,9 @@ pip install -U pip    # `pip install --group`, below, needs pip 25.1
 pip install -e ".[examples]"
 ```
 
-Optional extras:
+Optional extras, combined as `pip install "cosmic-warp[torch,skrl]"`:
 
 <!-- generated: extras -->
-
-Combine them as needed, quoting the brackets: `pip install "cosmic-warp[torch,skrl]"`.
 
 ## Verify
 
@@ -41,12 +45,11 @@ Combine them as needed, quoting the brackets: `pip install "cosmic-warp[torch,sk
 python -c "import warp as wp; wp.init()"
 ```
 
-`wp.init()` prints the devices Warp found. If no CUDA device is listed, pass
-`device="cpu"` to every simulator — the default device is `"cuda"`, and there
-is no automatic fallback (see [Troubleshooting](troubleshooting.md#cuda-not-available)).
+`wp.init()` lists the devices Warp found. Without a CUDA device, pass
+`device="cpu"` to every simulator: the default is `"cuda"`, with no
+automatic fallback ([Troubleshooting](troubleshooting.md#cuda-not-available)).
 
-From a clone, install the pinned test tools and run the suite on either
-device:
+From a clone, run the test suite:
 
 ```bash
 pip install -e . --group dev
@@ -69,33 +72,22 @@ altitude = np.linalg.norm(positions[-1], axis=1) - RE_EARTH
 print((altitude / 1e3).round(1))           # km, after 10 minutes
 ```
 
-It prints one altitude per environment, a little below the 400 km they
-started at:
+One altitude per environment, a little below the 400 km they started at:
 
 ```text
 [396.8 396.9 398.5 398.  397.5 399.1 398.9 397.5]
 ```
 
-What each line does:
-
-1. **Create the simulator.** Eight independent environments, one spacecraft
-   each, stepped with RK4 (the default integrator) at 1 s. Gravity and J2 are
-   on; the vehicle is a 1 kg cube. Kernels compile on first use, so the first
-   run takes longer (see [Troubleshooting](troubleshooting.md#slow-first-run)).
-2. **Reset.** `reset()` samples every environment's initial state: by
-   default within ±1 km and ±1 m/s of a circular 400 km orbit, with a random
-   attitude. [Initial conditions and resets](guides/reset.md) sets other
-   bounds or exact states.
-3. **Simulate.** `simulate(num_steps)` runs the steps on the device — on a GPU,
-   replayed as one CUDA graph. With `save_states=True` it also records the
-   state after every step.
-4. **Read back.** The results are Warp arrays on the device; `.numpy()`
-   copies one to the host.
+| Line | What it does |
+| --- | --- |
+| `SpacecraftSimulator(...)` | 8 independent environments, one 1 kg cube each, RK4 at 1 s, gravity and J2 on. Kernels compile on first use ([slow first run](troubleshooting.md#slow-first-run)). |
+| `sim.reset()` | Samples each initial state: by default within ±1 km and ±1 m/s of a circular 400 km orbit, random attitude ([resets](guides/reset.md)). |
+| `sim.simulate(...)` | Runs the steps on the device, as one CUDA graph on a GPU; `save_states=True` records the state after every step. |
+| `.numpy()` | Copies a device array to the host. |
 
 ## The state
 
-The state of each spacecraft lives on the device. The getters return one row
-per entity:
+The getters return one row per entity, `N = num_envs * num_bodies`:
 
 | Getter | Shape | Meaning |
 | --- | --- | --- |
@@ -105,10 +97,9 @@ per entity:
 | `get_angular_velocities()` | (N, 3) | body rates, rad/s |
 | `get_masses()` | (N,) | total mass (dry + propellant), kg |
 
-`N = num_envs * num_bodies`. Internally the state holds linear and angular
-momenta, not velocities; the getters convert. Each getter returns a buffer
-that the next call overwrites, so call `.numpy()` before calling it again.
-Frames and units are defined in [Frames, state and units](theory/conventions.md).
+The state holds momenta; the getters convert. Each getter returns a buffer
+its next call overwrites, so call `.numpy()` first. Frames and units:
+[Frames, state and units](theory/conventions.md).
 
 ## Fire a thruster
 
@@ -131,12 +122,11 @@ Each spacecraft burned `1 N × 60 s / (220 s × g0)` = 0.0278 kg:
 [11.97218956 11.97218956 11.97218956 11.97218956]
 ```
 
-[Vehicles](guides/vehicle.md) and [Actuators](guides/actuators.md) have the
-details.
+More in [Vehicles](guides/vehicle.md) and [Actuators](guides/actuators.md).
 
 ## Multi-body
 
-An environment can hold several spacecraft — a chaser and a target, say:
+An environment can hold several spacecraft, such as a chaser and a target:
 
 ```python
 sim = SpacecraftSimulator(num_envs=2, num_bodies=3)
@@ -146,16 +136,14 @@ env, body = 1, 2
 print(positions[env * sim.num_bodies + body])
 ```
 
-Rows are environment-major: `entity = env * num_bodies + body`. Bodies of one
-environment do not exert forces on each other; they share termination and
-reset. Every configuration call takes `body_ids=[...]` to configure one body
-across all environments.
+Rows are environment-major: `entity = env * num_bodies + body`. Bodies exert
+no forces on each other; they share termination and reset. Configuration
+calls take `body_ids=[...]` to configure one body in every environment.
 
 ## From a YAML file
 
-A whole scenario — simulator, physics, termination, vehicles, actuators,
-reset bounds and initial conditions — fits in one file. This one ships with
-the repository; run from its root:
+A whole scenario fits in one file. This one ships with the repository (run
+from its root):
 
 ```python
 from cosmic_warp.core.config import create_simulator_from_yaml
@@ -164,9 +152,9 @@ sim = create_simulator_from_yaml("examples/multibody_orbit.yaml")
 sim.simulate(num_steps=100)
 ```
 
-The loader checks every key and value and resets the simulator, so it is
-ready to step. Pass `device="cpu"` to override the file's device. The format
-is in [Configure a scenario](guides/configuration.md).
+The loader checks every key and value and returns a reset simulator;
+`device="cpu"` overrides the file's device. Format:
+[Configure a scenario](guides/configuration.md).
 
 ## Common tasks
 
@@ -181,10 +169,8 @@ is in [Configure a scenario](guides/configuration.md).
 | Randomize vehicle parameters | `sim.randomizer.set_bounds(...)` | [Domain randomization](guides/randomization.md) |
 | Record, terminate, auto-reset | `sim.simulate(..., auto_reset_terminated=True)` | [Run, record, terminate](guides/running.md) |
 
-## Next steps
+## Next
 
-- [Guides](guides/index.md) — one task per page.
-- [Examples](examples/index.md) — complete, runnable scripts, starting with
-  the [basic orbit](examples/01_basic_orbit.md).
-- [Validation](validation/index.md) — what is tested, against what.
-- [API reference](reference/api/cosmic_warp/index.md).
+[Guides](guides/index.md) · [Examples](examples/index.md), starting with the
+[basic orbit](examples/01_basic_orbit.md) · [Validation](validation/index.md) ·
+[API reference](reference/api/cosmic_warp/index.md)
