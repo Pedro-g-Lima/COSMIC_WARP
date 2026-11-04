@@ -1,7 +1,7 @@
 # Theory
 
-The models and methods behind every step, each tied to the code that
-implements it. Start with the conventions: every other page follows them.
+The models and methods behind every step, each tied to its code. Start
+with the conventions.
 
 - [Frames, state and units](conventions.md) — environments, bodies and
   entities; the inertial and body frames; the momentum state; units and
@@ -22,6 +22,5 @@ implements it. Start with the conventions: every other page follows them.
 - [Differentiable dynamics](differentiable.md) — what the reverse-mode
   gradients differentiate, and where they are not smooth.
 
-Each model is checked against analytic and reference solutions on the
-[Validation](../validation/index.md) pages; the sources are in the
+Evidence: [Validation](../validation/index.md). Sources:
 [bibliography](../references.md).
